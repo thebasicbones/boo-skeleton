@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
-from app.database import get_db
+from app.database_sqlalchemy import get_sqlalchemy_db as get_db
 from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse, ErrorResponse
 from app.services.resource_service import ResourceService
 

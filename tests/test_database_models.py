@@ -2,7 +2,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
-from app.models.resource import Base, Resource
+from app.models.sqlalchemy_resource import Base, Resource
 from datetime import datetime
 
 

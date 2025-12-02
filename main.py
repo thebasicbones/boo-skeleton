@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.database import init_db
+from app.database_sqlalchemy import init_sqlalchemy_db as init_db
 from app.error_handlers import register_exception_handlers
 from app.routers import resources
 

@@ -1,14 +1,15 @@
-"""Resource repository for database operations"""
+"""SQLAlchemy resource repository for database operations"""
 from typing import List, Optional
 from sqlalchemy import select, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from app.models.resource import Resource
+from app.models.sqlalchemy_resource import Resource
 from app.schemas import ResourceCreate, ResourceUpdate
+from app.repositories.base_resource_repository import BaseResourceRepository
 
 
-class ResourceRepository:
-    """Repository class for Resource database operations"""
+class SQLAlchemyResourceRepository(BaseResourceRepository):
+    """SQLAlchemy implementation of the resource repository interface"""
     
     def __init__(self, db: AsyncSession):
         """Initialize repository with database session"""

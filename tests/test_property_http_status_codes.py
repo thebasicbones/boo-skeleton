@@ -12,7 +12,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from main import app
-from app.database import init_db, drop_db, get_db, AsyncSessionLocal
+from app.database_sqlalchemy import init_sqlalchemy_db as init_db, drop_sqlalchemy_db as drop_db, get_sqlalchemy_db as get_db, AsyncSessionLocal
 
 
 # Strategy for generating valid resource names (1-100 characters, not just whitespace)

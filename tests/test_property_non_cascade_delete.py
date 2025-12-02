@@ -7,8 +7,8 @@ import pytest
 from hypothesis import given, strategies as st, settings, assume
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
-from app.models.resource import Base, Resource
-from app.repositories.resource_repository import ResourceRepository
+from app.models.sqlalchemy_resource import Base, Resource
+from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
 from app.schemas import ResourceCreate
 
 
@@ -104,7 +104,7 @@ async def test_non_cascade_delete_preserves_dependents(graph_data):
     )
     
     async with async_session() as session:
-        repository = ResourceRepository(session)
+        repository = SQLAlchemyResourceRepository(session)
         
         # Create all resources and track their IDs
         created_resources = []
@@ -162,7 +162,7 @@ async def test_non_cascade_delete_preserves_dependents(graph_data):
     # Create a new session to verify changes persisted correctly
     # (avoids SQLAlchemy session caching issues)
     async with async_session() as new_session:
-        new_repository = ResourceRepository(new_session)
+        new_repository = SQLAlchemyResourceRepository(new_session)
         
         # Verify all dependents still exist
         for dep_idx in dependent_indices:

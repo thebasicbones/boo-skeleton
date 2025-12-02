@@ -1,8 +1,8 @@
-"""Database connection and session management"""
+"""SQLAlchemy database connection and session management"""
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlalchemy import event
-from app.models.resource import Base
+from app.models.sqlalchemy_resource import Base
 import os
 
 # Database URL - use SQLite by default
@@ -35,8 +35,8 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-async def get_db():
-    """Dependency function to get database session"""
+async def get_sqlalchemy_db():
+    """Dependency function to get SQLAlchemy database session"""
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -44,13 +44,13 @@ async def get_db():
             await session.close()
 
 
-async def init_db():
-    """Initialize database - create all tables"""
+async def init_sqlalchemy_db():
+    """Initialize SQLAlchemy database - create all tables"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def drop_db():
-    """Drop all tables - useful for testing"""
+async def drop_sqlalchemy_db():
+    """Drop all SQLAlchemy tables - useful for testing"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

@@ -2,7 +2,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from app.models.resource import Base, Resource
+from app.models.sqlalchemy_resource import Base, Resource
 from app.services.resource_service import (
     ResourceService,
     ResourceNotFoundError,

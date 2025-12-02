@@ -1,10 +1,10 @@
 """Resource Service for business logic and coordination"""
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.repositories.resource_repository import ResourceRepository
+from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
 from app.services.topological_sort_service import TopologicalSortService
 from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse
-from app.models.resource import Resource
+from app.models.sqlalchemy_resource import Resource
 from app.exceptions import ResourceNotFoundError, ValidationError, CircularDependencyError
 
 
@@ -14,7 +14,7 @@ class ResourceService:
     def __init__(self, db: AsyncSession):
         """Initialize service with database session"""
         self.db = db
-        self.repository = ResourceRepository(db)
+        self.repository = SQLAlchemyResourceRepository(db)
         self.topo_service = TopologicalSortService()
     
     async def create_resource(self, data: ResourceCreate) -> ResourceResponse:

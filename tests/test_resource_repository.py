@@ -2,8 +2,8 @@
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
-from app.models.resource import Base, Resource
-from app.repositories.resource_repository import ResourceRepository
+from app.models.sqlalchemy_resource import Base, Resource
+from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
 from app.schemas import ResourceCreate, ResourceUpdate
 
 
@@ -35,8 +35,8 @@ async def db_session():
 
 @pytest.fixture
 def repository(db_session):
-    """Create a ResourceRepository instance"""
-    return ResourceRepository(db_session)
+    """Create a SQLAlchemyResourceRepository instance"""
+    return SQLAlchemyResourceRepository(db_session)
 
 
 @pytest.mark.asyncio
