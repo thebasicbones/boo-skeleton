@@ -1,4 +1,4 @@
-ˀ"""SQLAlchemy models for Resource and ResourceDependency"""
+"""SQLAlchemy models for Resource and ResourceDependency"""
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, ForeignKey, Table, Index
 from sqlalchemy.orm import relationship, declarative_base
