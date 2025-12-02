@@ -1,0 +1,226 @@
+"""Pydantic schemas for request/response validation"""
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+
+
+class ResourceCreate(BaseModel):
+    """Schema for creating a new resource"""
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Resource name (required, 1-100 characters)"
+    )
+    description: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Resource description (optional, max 500 characters)"
+    )
+    dependencies: List[str] = Field(
+        default_factory=list,
+        description="List of resource IDs this resource depends on"
+    )
+    
+    @field_validator('name')
+    @classmethod
+    def name_must_not_be_empty(cls, v: str) -> str:
+        """Validate that name is not just whitespace"""
+        if not v or not v.strip():
+            raise ValueError('Name cannot be empty or whitespace only')
+        return v.strip()
+    
+    @field_validator('description')
+    @classmethod
+    def description_strip_whitespace(cls, v: Optional[str]) -> Optional[str]:
+        """Strip whitespace from description"""
+        if v is not None:
+            stripped = v.strip()
+            return stripped if stripped else None
+        return v
+    
+    @field_validator('dependencies')
+    @classmethod
+    def dependencies_must_be_unique(cls, v: List[str]) -> List[str]:
+        """Validate that dependencies list contains unique IDs"""
+        if len(v) != len(set(v)):
+            raise ValueError('Dependencies must be unique')
+        return v
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Frontend Service",
+                    "description": "React-based frontend application",
+                    "dependencies": ["backend-api-uuid", "auth-service-uuid"]
+                }
+            ]
+        }
+    }
+
+
+class ResourceUpdate(BaseModel):
+    """Schema for updating an existing resource"""
+    name: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=100,
+        description="Resource name (optional, 1-100 characters)"
+    )
+    description: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Resource description (optional, max 500 characters)"
+    )
+    dependencies: Optional[List[str]] = Field(
+        None,
+        description="List of resource IDs this resource depends on"
+    )
+    
+    @field_validator('name')
+    @classmethod
+    def name_must_not_be_empty(cls, v: Optional[str]) -> Optional[str]:
+        """Validate that name is not just whitespace if provided"""
+        if v is not None:
+            if not v.strip():
+                raise ValueError('Name cannot be empty or whitespace only')
+            return v.strip()
+        return v
+    
+    @field_validator('description')
+    @classmethod
+    def description_strip_whitespace(cls, v: Optional[str]) -> Optional[str]:
+        """Strip whitespace from description"""
+        if v is not None:
+            stripped = v.strip()
+            return stripped if stripped else None
+        return v
+    
+    @field_validator('dependencies')
+    @classmethod
+    def dependencies_must_be_unique(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """Validate that dependencies list contains unique IDs if provided"""
+        if v is not None and len(v) != len(set(v)):
+            raise ValueError('Dependencies must be unique')
+        return v
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Updated Frontend Service",
+                    "description": "React-based frontend with new features",
+                    "dependencies": ["backend-api-uuid"]
+                }
+            ]
+        }
+    }
+
+
+class ResourceResponse(BaseModel):
+    """Schema for resource response"""
+    id: str = Field(..., description="Unique resource identifier")
+    name: str = Field(..., description="Resource name")
+    description: Optional[str] = Field(None, description="Resource description")
+    dependencies: List[str] = Field(
+        default_factory=list,
+        description="List of resource IDs this resource depends on"
+    )
+    created_at: datetime = Field(..., description="Resource creation timestamp")
+    updated_at: datetime = Field(..., description="Resource last update timestamp")
+    
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "name": "Frontend Service",
+                    "description": "React-based frontend application",
+                    "dependencies": ["backend-api-uuid", "auth-service-uuid"],
+                    "created_at": "2024-01-15T10:30:00Z",
+                    "updated_at": "2024-01-15T10:30:00Z"
+                }
+            ]
+        }
+    }
+
+
+class ResourceList(BaseModel):
+    """Schema for list of resources with metadata"""
+    resources: List[ResourceResponse] = Field(
+        default_factory=list,
+        description="List of resources"
+    )
+    total: int = Field(..., description="Total number of resources")
+    topologically_sorted: bool = Field(
+        default=False,
+        description="Whether the list is topologically sorted"
+    )
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "resources": [
+                        {
+                            "id": "uuid-1",
+                            "name": "Database",
+                            "description": "PostgreSQL database",
+                            "dependencies": [],
+                            "created_at": "2024-01-15T10:30:00Z",
+                            "updated_at": "2024-01-15T10:30:00Z"
+                        }
+                    ],
+                    "total": 1,
+                    "topologically_sorted": True
+                }
+            ]
+        }
+    }
+
+
+class ErrorDetail(BaseModel):
+    """Schema for detailed error information"""
+    field: Optional[str] = Field(None, description="Field that caused the error")
+    message: str = Field(..., description="Error message for this field")
+    type: Optional[str] = Field(None, description="Error type")
+
+
+class ErrorResponse(BaseModel):
+    """Schema for consistent error responses"""
+    error: str = Field(..., description="Error type/category")
+    message: str = Field(..., description="Human-readable error description")
+    details: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Additional error details"
+    )
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "error": "ValidationError",
+                    "message": "Invalid resource data provided",
+                    "details": {
+                        "name": "Name cannot be empty or whitespace only"
+                    }
+                },
+                {
+                    "error": "NotFoundError",
+                    "message": "Resource not found",
+                    "details": {
+                        "resource_id": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                },
+                {
+                    "error": "CircularDependencyError",
+                    "message": "Circular dependency detected",
+                    "details": {
+                        "cycle": "A → B → C → A"
+                    }
+                }
+            ]
+        }
+    }
