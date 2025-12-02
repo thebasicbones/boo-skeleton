@@ -2,24 +2,10 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.resource_repository import ResourceRepository
-from app.services.topological_sort_service import TopologicalSortService, CircularDependencyError
+from app.services.topological_sort_service import TopologicalSortService
 from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse
 from app.models.resource import Resource
-
-
-class ResourceNotFoundError(Exception):
-    """Exception raised when a resource is not found"""
-    def __init__(self, resource_id: str):
-        self.resource_id = resource_id
-        super().__init__(f"Resource not found: {resource_id}")
-
-
-class ValidationError(Exception):
-    """Exception raised when validation fails"""
-    def __init__(self, message: str, details: dict = None):
-        self.message = message
-        self.details = details or {}
-        super().__init__(message)
+from app.exceptions import ResourceNotFoundError, ValidationError, CircularDependencyError
 
 
 class ResourceService:

@@ -1,15 +1,11 @@
 """FastAPI router for resource endpoints"""
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from app.database import get_db
 from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse, ErrorResponse
-from app.services.resource_service import (
-    ResourceService,
-    ResourceNotFoundError,
-    ValidationError
-)
+from app.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/api", tags=["resources"])
 
@@ -38,28 +34,8 @@ async def create_resource(
     Returns the created resource with a unique identifier.
     """
     service = ResourceService(db)
-    
-    try:
-        resource = await service.create_resource(data)
-        return resource
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={
-                "error": "ValidationError",
-                "message": e.message,
-                "details": e.details
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An unexpected error occurred",
-                "details": {"error": str(e)}
-            }
-        )
+    resource = await service.create_resource(data)
+    return resource
 
 
 @router.get(
@@ -80,19 +56,8 @@ async def list_resources(
     Returns a list of all resources in the system.
     """
     service = ResourceService(db)
-    
-    try:
-        resources = await service.get_all_resources()
-        return resources
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An unexpected error occurred",
-                "details": {"error": str(e)}
-            }
-        )
+    resources = await service.get_all_resources()
+    return resources
 
 
 @router.get(
@@ -117,28 +82,8 @@ async def get_resource(
     Returns the resource data.
     """
     service = ResourceService(db)
-    
-    try:
-        resource = await service.get_resource(resource_id)
-        return resource
-    except ResourceNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error": "NotFoundError",
-                "message": str(e),
-                "details": {"resource_id": e.resource_id}
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An unexpected error occurred",
-                "details": {"error": str(e)}
-            }
-        )
+    resource = await service.get_resource(resource_id)
+    return resource
 
 
 
@@ -169,37 +114,8 @@ async def update_resource(
     Returns the updated resource.
     """
     service = ResourceService(db)
-    
-    try:
-        resource = await service.update_resource(resource_id, data)
-        return resource
-    except ResourceNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error": "NotFoundError",
-                "message": str(e),
-                "details": {"resource_id": e.resource_id}
-            }
-        )
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={
-                "error": "ValidationError",
-                "message": e.message,
-                "details": e.details
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An unexpected error occurred",
-                "details": {"error": str(e)}
-            }
-        )
+    resource = await service.update_resource(resource_id, data)
+    return resource
 
 
 @router.delete(
@@ -225,28 +141,8 @@ async def delete_resource(
     Returns 204 No Content on success.
     """
     service = ResourceService(db)
-    
-    try:
-        await service.delete_resource(resource_id, cascade)
-        return None
-    except ResourceNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error": "NotFoundError",
-                "message": str(e),
-                "details": {"resource_id": e.resource_id}
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An unexpected error occurred",
-                "details": {"error": str(e)}
-            }
-        )
+    await service.delete_resource(resource_id, cascade)
+    return None
 
 
 @router.get(
@@ -272,25 +168,5 @@ async def search_resources(
     Dependencies always appear before dependents in the results.
     """
     service = ResourceService(db)
-    
-    try:
-        resources = await service.search_resources(q)
-        return resources
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={
-                "error": "ValidationError",
-                "message": e.message,
-                "details": e.details
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An unexpected error occurred",
-                "details": {"error": str(e)}
-            }
-        )
+    resources = await service.search_resources(q)
+    return resources

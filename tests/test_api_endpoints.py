@@ -97,7 +97,9 @@ async def test_get_nonexistent_resource(client: AsyncClient):
     
     assert response.status_code == 404
     data = response.json()
-    assert "error" in data["detail"]
+    assert data["error"] == "NotFoundError"
+    assert "message" in data
+    assert "details" in data
 
 
 @pytest.mark.asyncio

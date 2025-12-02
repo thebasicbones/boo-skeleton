@@ -1,4 +1,5 @@
 """Main FastAPI application entry point"""
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -6,16 +7,31 @@ from contextlib import asynccontextmanager
 
 from app.database import init_db
 from app.routers import resources
+from app.error_handlers import register_exception_handlers
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log')
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events"""
     # Startup: Initialize database
+    logger.info("Starting application - initializing database")
     await init_db()
+    logger.info("Database initialized successfully")
     yield
     # Shutdown: cleanup if needed
-    pass
+    logger.info("Shutting down application")
 
 
 # Create FastAPI application
@@ -25,6 +41,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Register global exception handlers
+register_exception_handlers(app)
 
 # Configure CORS middleware for frontend access
 app.add_middleware(

@@ -2,13 +2,7 @@
 from typing import List, Dict, Set, Optional, Tuple
 from collections import deque
 
-
-class CircularDependencyError(Exception):
-    """Exception raised when a circular dependency is detected"""
-    def __init__(self, cycle_path: List[str]):
-        self.cycle_path = cycle_path
-        cycle_str = " → ".join(cycle_path)
-        super().__init__(f"Circular dependency detected: {cycle_str}")
+from app.exceptions import CircularDependencyError
 
 
 class TopologicalSortService:
