@@ -47,7 +47,7 @@ def register_exception_handlers(app):
         """
         logger.warning(
             f"Validation error: {exc.message} - Path: {request.url.path}",
-            extra={"message": exc.message, "details": exc.details, "path": request.url.path}
+            extra={"error_message": exc.message, "details": exc.details, "path": request.url.path}
         )
         
         return JSONResponse(
@@ -85,9 +85,27 @@ def register_exception_handlers(app):
         Handle Pydantic validation errors from request parsing.
         Returns HTTP 422 with consistent error format.
         """
+        # Convert Pydantic errors to JSON-serializable format
+        errors = []
+        for error in exc.errors():
+            error_dict = {
+                "loc": list(error.get("loc", [])),
+                "msg": error.get("msg", ""),
+                "type": error.get("type", "")
+            }
+            # Only include input if it's JSON serializable
+            if "input" in error:
+                try:
+                    # Try to include the input value
+                    error_dict["input"] = error["input"]
+                except (TypeError, ValueError):
+                    # Skip if not serializable
+                    pass
+            errors.append(error_dict)
+        
         logger.warning(
             f"Request validation error - Path: {request.url.path}",
-            extra={"errors": exc.errors(), "path": request.url.path}
+            extra={"errors": errors, "path": request.url.path}
         )
         
         return JSONResponse(
@@ -95,7 +113,7 @@ def register_exception_handlers(app):
             content={
                 "error": "ValidationError",
                 "message": "Request validation failed",
-                "details": {"validation_errors": exc.errors()}
+                "details": {"validation_errors": errors}
             }
         )
     

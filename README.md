@@ -49,20 +49,70 @@ pip install -r requirements.txt
 - **Hypothesis**: Property-based testing library
 - **HTTPx**: HTTP client for testing
 
-## Development
+## Running the Application
 
-The virtual environment has been set up and all dependencies are installed. You can now proceed with implementing the application components.
+### Option 1: Using the startup script
+
+```bash
+./run.sh
+```
+
+### Option 2: Using Python directly
+
+```bash
+python main.py
+```
+
+### Option 3: Using Uvicorn directly
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The server will start at:
+- **API**: http://localhost:8000
+- **API Documentation (Swagger)**: http://localhost:8000/docs
+- **API Documentation (ReDoc)**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
+
+## API Endpoints
+
+### Resources
+
+- `POST /api/resources` - Create a new resource
+- `GET /api/resources` - List all resources
+- `GET /api/resources/{id}` - Get a specific resource
+- `PUT /api/resources/{id}` - Update a resource
+- `DELETE /api/resources/{id}?cascade=true` - Delete a resource (with optional cascade)
+- `GET /api/search?q=query` - Search resources with topological sorting
+
+### System
+
+- `GET /` - API information
+- `GET /health` - Health check endpoint
 
 ## Testing
 
-Run tests with:
+Run all tests:
 
 ```bash
 pytest
 ```
 
-Run property-based tests with:
+Run tests with verbose output:
 
 ```bash
-pytest -v tests/
+pytest -v
+```
+
+Run specific test file:
+
+```bash
+pytest tests/test_api_endpoints.py -v
+```
+
+Run property-based tests only:
+
+```bash
+pytest tests/test_property_*.py -v
 ```

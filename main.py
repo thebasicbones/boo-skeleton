@@ -1,21 +1,28 @@
-"""Main FastAPI application entry point"""
+"""
+FastAPI CRUD Backend Application Entry Point
+
+This module initializes the FastAPI application with all necessary
+configurations, middleware, routers, and error handlers.
+"""
 import logging
+import sys
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
 
 from app.database import init_db
-from app.routers import resources
 from app.error_handlers import register_exception_handlers
+from app.routers import resources
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('app.log')
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("app.log")
     ]
 )
 
@@ -24,26 +31,56 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for startup and shutdown events"""
+    """
+    Lifespan context manager for FastAPI application.
+    Handles startup and shutdown events.
+    """
     # Startup: Initialize database
-    logger.info("Starting application - initializing database")
-    await init_db()
-    logger.info("Database initialized successfully")
+    logger.info("Starting up application...")
+    try:
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}", exc_info=True)
+        raise
+    
     yield
-    # Shutdown: cleanup if needed
-    logger.info("Shutting down application")
+    
+    # Shutdown
+    logger.info("Shutting down application...")
 
 
-# Create FastAPI application
+# Create FastAPI application instance
 app = FastAPI(
     title="FastAPI CRUD Backend",
-    description="RESTful API with CRUD operations and topological sort search",
+    description="""
+    A RESTful API backend with CRUD operations and topological sorting capabilities.
+    
+    ## Features
+    
+    * **Create** resources with dependencies
+    * **Read** individual resources or list all resources
+    * **Update** existing resources and their dependencies
+    * **Delete** resources with optional cascade deletion
+    * **Search** resources with topological sorting based on dependencies
+    
+    ## Topological Sorting
+    
+    The search endpoint returns resources ordered by their dependencies,
+    ensuring that dependencies always appear before their dependents.
+    This is useful for processing resources in the correct order.
+    
+    ## Dependency Management
+    
+    Resources can depend on other resources, forming a directed acyclic graph (DAG).
+    The system automatically detects and prevents circular dependencies.
+    """,
     version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     lifespan=lifespan
 )
-
-# Register global exception handlers
-register_exception_handlers(app)
 
 # Configure CORS middleware for frontend access
 app.add_middleware(
@@ -54,19 +91,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register exception handlers
+register_exception_handlers(app)
+
 # Register routers
 app.include_router(resources.router)
 
 # Mount static files directory for frontend
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-@app.get("/health")
+@app.get("/", tags=["root"])
+async def root():
+    """
+    Root endpoint - returns API information.
+    """
+    return {
+        "message": "FastAPI CRUD Backend API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "redoc": "/redoc"
+    }
+
+
+@app.get("/health", tags=["health"])
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+    """
+    Health check endpoint - returns application status.
+    """
+    return {
+        "status": "healthy",
+        "service": "fastapi-crud-backend"
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    # Run the application
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,  # Enable auto-reload for development
+        log_level="info"
+    )
