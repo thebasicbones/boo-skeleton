@@ -269,70 +269,407 @@ The server will start at:
 
 ### Resources
 
-- `POST /api/resources` - Create a new resource
-- `GET /api/resources` - List all resources
-- `GET /api/resources/{id}` - Get a specific resource
-- `PUT /api/resources/{id}` - Update a resource
-- `DELETE /api/resources/{id}?cascade=true` - Delete a resource (with optional cascade)
-- `GET /api/search?q=query` - Search resources with topological sorting
+#### Create Resource
+```http
+POST /api/resources
+Content-Type: application/json
 
-### System
+{
+  "name": "Frontend App",
+  "description": "React frontend application",
+  "dependencies": ["backend-api-id", "database-id"]
+}
+```
 
-- `GET /` - API information
-- `GET /health` - Health check endpoint
+**Response (201 Created):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Frontend App",
+  "description": "React frontend application",
+  "dependencies": ["backend-api-id", "database-id"],
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+#### List All Resources
+```http
+GET /api/resources
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "database-id",
+    "name": "PostgreSQL Database",
+    "description": "Main application database",
+    "dependencies": [],
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": "backend-api-id",
+    "name": "Backend API",
+    "description": "FastAPI backend service",
+    "dependencies": ["database-id"],
+    "created_at": "2024-01-15T10:15:00Z",
+    "updated_at": "2024-01-15T10:15:00Z"
+  }
+]
+```
+
+#### Get Single Resource
+```http
+GET /api/resources/{id}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "backend-api-id",
+  "name": "Backend API",
+  "description": "FastAPI backend service",
+  "dependencies": ["database-id"],
+  "created_at": "2024-01-15T10:15:00Z",
+  "updated_at": "2024-01-15T10:15:00Z"
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "error": "ResourceNotFound",
+  "message": "Resource with id 'invalid-id' not found",
+  "details": {}
+}
+```
+
+#### Update Resource
+```http
+PUT /api/resources/{id}
+Content-Type: application/json
+
+{
+  "name": "Backend API v2",
+  "description": "Updated FastAPI backend service",
+  "dependencies": ["database-id", "cache-id"]
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "backend-api-id",
+  "name": "Backend API v2",
+  "description": "Updated FastAPI backend service",
+  "dependencies": ["database-id", "cache-id"],
+  "created_at": "2024-01-15T10:15:00Z",
+  "updated_at": "2024-01-15T11:00:00Z"
+}
+```
+
+#### Delete Resource
+```http
+DELETE /api/resources/{id}?cascade=false
+```
+
+**Response (204 No Content)**
+
+Query Parameters:
+- `cascade` (boolean, default: false): If true, deletes all resources that depend on this resource
+
+**Examples:**
+- `DELETE /api/resources/{id}?cascade=false` - Delete only this resource
+- `DELETE /api/resources/{id}?cascade=true` - Delete this resource and all dependents
+
+#### Search Resources (Topological Sort)
+```http
+GET /api/search?q=api
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "database-id",
+    "name": "PostgreSQL Database",
+    "description": "Main application database",
+    "dependencies": [],
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": "backend-api-id",
+    "name": "Backend API",
+    "description": "FastAPI backend service",
+    "dependencies": ["database-id"],
+    "created_at": "2024-01-15T10:15:00Z",
+    "updated_at": "2024-01-15T10:15:00Z"
+  },
+  {
+    "id": "frontend-id",
+    "name": "Frontend App",
+    "description": "React frontend application",
+    "dependencies": ["backend-api-id"],
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+]
+```
+
+**Note:** Results are always returned in topological order, with dependencies appearing before dependents.
+
+**Error Response (422 Unprocessable Entity) - Circular Dependency:**
+```json
+{
+  "error": "CircularDependencyError",
+  "message": "Circular dependency detected: A → B → C → A",
+  "details": {
+    "cycle": ["A", "B", "C", "A"]
+  }
+}
+```
+
+### System Endpoints
+
+#### API Information
+```http
+GET /
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "FastAPI CRUD Backend API",
+  "version": "1.0.0",
+  "docs": "/docs",
+  "redoc": "/redoc"
+}
+```
+
+#### Health Check
+```http
+GET /health
+```
+
+**Response (200 OK):**
+```json
+{
+  "status": "healthy",
+  "service": "fastapi-crud-backend"
+}
+```
 
 ## Testing
 
-Run all tests:
+The project includes a comprehensive test suite with both unit tests and property-based tests using Hypothesis.
+
+### Running All Tests
 
 ```bash
 pytest
 ```
 
-Run tests with verbose output:
+### Running Tests with Verbose Output
 
 ```bash
 pytest -v
 ```
 
-Run specific test file:
+### Running Tests with Coverage
 
 ```bash
-pytest tests/test_api_endpoints.py -v
+pytest --cov=app --cov-report=html
 ```
 
-Run property-based tests only:
+This generates an HTML coverage report in `htmlcov/index.html`.
 
+### Running Specific Test Categories
+
+**Run only unit tests:**
+```bash
+pytest tests/test_api_endpoints.py tests/test_resource_service.py tests/test_schemas.py -v
+```
+
+**Run only property-based tests:**
 ```bash
 pytest tests/test_property_*.py -v
 ```
+
+**Run specific property test:**
+```bash
+pytest tests/test_property_crud_roundtrip.py -v
+```
+
+**Run tests matching a pattern:**
+```bash
+pytest -k "crud" -v  # Runs all tests with "crud" in the name
+pytest -k "property" -v  # Runs all property-based tests
+```
+
+### Test Categories
+
+The test suite is organized into several categories:
+
+1. **Unit Tests** (`test_*.py`):
+   - `test_api_endpoints.py` - API endpoint integration tests
+   - `test_resource_service.py` - Business logic tests
+   - `test_resource_repository.py` - Data access layer tests
+   - `test_schemas.py` - Pydantic schema validation tests
+   - `test_topological_sort_service.py` - Topological sort algorithm tests
+   - `test_database_factory.py` - Database factory tests
+   - `test_database_models.py` - Database model tests
+
+2. **Property-Based Tests** (`test_property_*.py`):
+   - `test_property_crud_roundtrip.py` - Create/read round-trip properties
+   - `test_property_cascade_delete.py` - Cascade delete behavior
+   - `test_property_invalid_data_rejection.py` - Input validation
+   - `test_property_http_status_codes.py` - HTTP status code correctness
+   - `test_property_error_response_consistency.py` - Error format consistency
+   - `test_property_update_persistence.py` - Update persistence
+   - `test_property_delete_functionality.py` - Delete operations
+   - `test_property_create_form_submission.py` - Frontend form submission
+   - `test_property_resource_display.py` - Frontend display completeness
+   - `test_property_search_display.py` - Search and topological sort
+   - And more...
+
+### Property-Based Testing
+
+Property-based tests use Hypothesis to generate random test data and verify that properties hold across all inputs. Each test runs 100 iterations by default.
+
+**Example property test output:**
+```
+tests/test_property_crud_roundtrip.py::test_resource_creation_roundtrip PASSED
+  Hypothesis: 100 examples generated
+```
+
+**When a property test fails:**
+```
+tests/test_property_crud_roundtrip.py::test_resource_creation_roundtrip FAILED
+  Falsifying example: test_resource_creation_roundtrip(
+    resource_data={'name': 'A', 'description': '', 'dependencies': []}
+  )
+```
+
+Hypothesis automatically finds the minimal failing example and saves it for regression testing.
 
 ### MongoDB Testing
 
 Some property-based tests require MongoDB to be running. If MongoDB is not available, these tests will be automatically skipped.
 
-To run MongoDB tests, ensure MongoDB is running locally:
+**Setup MongoDB for testing:**
 
 ```bash
-# Using Docker
-docker run -d -p 27017:27017 --name mongodb mongo:7.0
+# Option 1: Using Docker
+docker run -d -p 27017:27017 --name mongodb-test mongo:7.0
 
-# Or install MongoDB locally and start the service
-# macOS: brew services start mongodb-community
-# Linux: sudo systemctl start mongod
+# Option 2: Using local MongoDB
+# macOS
+brew services start mongodb-community
+
+# Linux
+sudo systemctl start mongod
 ```
 
-Set the test database environment variable:
-
+**Set test database environment variable:**
 ```bash
 export MONGODB_DATABASE=fastapi_crud_test
 ```
 
-Then run the tests:
-
+**Run MongoDB-specific tests:**
 ```bash
 pytest tests/test_property_mongodb_*.py -v
 ```
+
+**Run all tests including MongoDB tests:**
+```bash
+# Ensure MongoDB is running first
+pytest -v
+```
+
+### Test Configuration
+
+Test configuration is defined in `pytest.ini`:
+
+```ini
+[pytest]
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+asyncio_mode = auto
+```
+
+### Continuous Integration
+
+For CI/CD pipelines, you can run tests with specific options:
+
+```bash
+# Run tests with JUnit XML output for CI systems
+pytest --junitxml=test-results.xml
+
+# Run tests with coverage and fail if coverage is below threshold
+pytest --cov=app --cov-fail-under=80
+
+# Run tests in parallel (requires pytest-xdist)
+pytest -n auto
+```
+
+### Debugging Tests
+
+**Run tests with print statements visible:**
+```bash
+pytest -s
+```
+
+**Run tests with detailed output:**
+```bash
+pytest -vv
+```
+
+**Run tests and drop into debugger on failure:**
+```bash
+pytest --pdb
+```
+
+**Run only failed tests from last run:**
+```bash
+pytest --lf
+```
+
+**Run failed tests first, then others:**
+```bash
+pytest --ff
+```
+
+### Writing New Tests
+
+When adding new functionality, follow these guidelines:
+
+1. **Write unit tests** for specific examples and edge cases
+2. **Write property tests** for universal properties that should hold across all inputs
+3. **Tag property tests** with the design document property they validate:
+   ```python
+   # Feature: fastapi-crud-backend, Property 1: Resource creation round-trip
+   @given(resource_data=resource_strategy())
+   async def test_resource_creation_roundtrip(resource_data):
+       # Test implementation
+   ```
+
+4. **Use appropriate test fixtures** from `conftest.py`
+5. **Follow the existing test structure** for consistency
+
+### Test Fixtures
+
+Common fixtures available in `conftest.py`:
+
+- `db_session` - Database session for tests
+- `client` - FastAPI test client
+- `sample_resource` - Pre-created sample resource
+- `resource_strategy()` - Hypothesis strategy for generating resources
+- `dependency_graph_strategy()` - Strategy for generating dependency graphs
 
 ## Migrating from SQLite to MongoDB
 
@@ -427,6 +764,303 @@ After successful migration:
    - Verify resource counts match
 
 For detailed migration documentation, see [scripts/README_MIGRATION.md](scripts/README_MIGRATION.md).
+
+## Example Usage Scenarios
+
+### Scenario 1: Building a Microservices Deployment Pipeline
+
+Imagine you're managing a microservices architecture where services depend on each other. You can use this system to model and manage deployment order.
+
+**Step 1: Create the database resource**
+```bash
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "PostgreSQL Database",
+    "description": "Main application database",
+    "dependencies": []
+  }'
+```
+
+**Step 2: Create the backend API that depends on the database**
+```bash
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Backend API",
+    "description": "FastAPI backend service",
+    "dependencies": ["<database-id>"]
+  }'
+```
+
+**Step 3: Create the frontend that depends on the backend**
+```bash
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Frontend App",
+    "description": "React frontend application",
+    "dependencies": ["<backend-api-id>"]
+  }'
+```
+
+**Step 4: Get deployment order using topological sort**
+```bash
+curl http://localhost:8000/api/search
+```
+
+This returns resources in the correct deployment order: Database → Backend API → Frontend App
+
+### Scenario 2: Managing Build Dependencies
+
+Track build dependencies for a complex project with multiple components.
+
+**Create build targets:**
+```bash
+# Create compiler
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Compiler", "description": "C++ compiler", "dependencies": []}'
+
+# Create standard library (depends on compiler)
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Standard Library", "description": "C++ standard library", "dependencies": ["<compiler-id>"]}'
+
+# Create application (depends on standard library)
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Application", "description": "Main application", "dependencies": ["<stdlib-id>"]}'
+```
+
+**Get build order:**
+```bash
+curl http://localhost:8000/api/search
+```
+
+### Scenario 3: Handling Circular Dependencies
+
+The system automatically detects and prevents circular dependencies.
+
+**Attempt to create a circular dependency:**
+```bash
+# Create Resource A
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Resource A", "dependencies": []}'
+
+# Create Resource B depending on A
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Resource B", "dependencies": ["<resource-a-id>"]}'
+
+# Try to update Resource A to depend on B (creates a cycle)
+curl -X PUT http://localhost:8000/api/resources/<resource-a-id> \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Resource A", "dependencies": ["<resource-b-id>"]}'
+```
+
+**Response (422 Unprocessable Entity):**
+```json
+{
+  "error": "CircularDependencyError",
+  "message": "Circular dependency detected: Resource A → Resource B → Resource A",
+  "details": {
+    "cycle": ["Resource A", "Resource B", "Resource A"]
+  }
+}
+```
+
+### Scenario 4: Cascade Delete
+
+Remove a resource and all its dependents in one operation.
+
+**Setup:**
+```bash
+# Create: Database → API → Frontend → Mobile App
+# Database has no dependencies
+# API depends on Database
+# Frontend depends on API
+# Mobile App depends on API
+```
+
+**Delete with cascade:**
+```bash
+# Delete the API and everything that depends on it
+curl -X DELETE "http://localhost:8000/api/resources/<api-id>?cascade=true"
+```
+
+This removes: API, Frontend, and Mobile App (but keeps Database)
+
+**Delete without cascade:**
+```bash
+# Delete only the API
+curl -X DELETE "http://localhost:8000/api/resources/<api-id>?cascade=false"
+```
+
+This removes only the API and updates Frontend and Mobile App to remove the dependency.
+
+### Scenario 5: Searching and Filtering
+
+Search for specific resources while maintaining topological order.
+
+**Search for all resources containing "api":**
+```bash
+curl "http://localhost:8000/api/search?q=api"
+```
+
+**Get all resources in topological order:**
+```bash
+curl http://localhost:8000/api/search
+```
+
+### Scenario 6: Using the Web Interface
+
+1. **Open the web interface:**
+   - Navigate to http://localhost:8000/static/index.html
+
+2. **Create resources:**
+   - Click "Add Resource" button
+   - Fill in name, description, and select dependencies
+   - Submit the form
+
+3. **View dependency visualization:**
+   - Resources are displayed with visual indicators showing dependencies
+   - Dependencies are shown as badges or arrows
+
+4. **Search with topological sort:**
+   - Type in the search bar
+   - Results automatically update in dependency order
+
+5. **Update resources:**
+   - Click "Edit" on any resource
+   - Modify fields and dependencies
+   - Save changes
+
+6. **Delete resources:**
+   - Click "Delete" on any resource
+   - Choose whether to cascade delete
+   - Confirm deletion
+
+### Scenario 7: Python Client Example
+
+```python
+import httpx
+import asyncio
+
+async def main():
+    base_url = "http://localhost:8000"
+    
+    async with httpx.AsyncClient() as client:
+        # Create a resource
+        response = await client.post(
+            f"{base_url}/api/resources",
+            json={
+                "name": "My Resource",
+                "description": "A test resource",
+                "dependencies": []
+            }
+        )
+        resource = response.json()
+        print(f"Created resource: {resource['id']}")
+        
+        # Get all resources
+        response = await client.get(f"{base_url}/api/resources")
+        resources = response.json()
+        print(f"Total resources: {len(resources)}")
+        
+        # Search with topological sort
+        response = await client.get(f"{base_url}/api/search?q=test")
+        results = response.json()
+        print(f"Search results: {len(results)}")
+        
+        # Update resource
+        response = await client.put(
+            f"{base_url}/api/resources/{resource['id']}",
+            json={
+                "name": "Updated Resource",
+                "description": "Updated description"
+            }
+        )
+        updated = response.json()
+        print(f"Updated: {updated['name']}")
+        
+        # Delete resource
+        response = await client.delete(
+            f"{base_url}/api/resources/{resource['id']}"
+        )
+        print(f"Deleted: {response.status_code == 204}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Scenario 8: JavaScript/Frontend Example
+
+```javascript
+// API client functions
+const API_BASE = 'http://localhost:8000/api';
+
+async function createResource(name, description, dependencies = []) {
+  const response = await fetch(`${API_BASE}/resources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, description, dependencies })
+  });
+  return response.json();
+}
+
+async function getAllResources() {
+  const response = await fetch(`${API_BASE}/resources`);
+  return response.json();
+}
+
+async function searchResources(query) {
+  const url = query 
+    ? `${API_BASE}/search?q=${encodeURIComponent(query)}`
+    : `${API_BASE}/search`;
+  const response = await fetch(url);
+  return response.json();
+}
+
+async function updateResource(id, data) {
+  const response = await fetch(`${API_BASE}/resources/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+async function deleteResource(id, cascade = false) {
+  const response = await fetch(
+    `${API_BASE}/resources/${id}?cascade=${cascade}`,
+    { method: 'DELETE' }
+  );
+  return response.status === 204;
+}
+
+// Example usage
+async function example() {
+  // Create resources
+  const db = await createResource('Database', 'PostgreSQL database', []);
+  const api = await createResource('API', 'Backend API', [db.id]);
+  const frontend = await createResource('Frontend', 'React app', [api.id]);
+  
+  // Get topological order
+  const sorted = await searchResources();
+  console.log('Deployment order:', sorted.map(r => r.name));
+  
+  // Update a resource
+  await updateResource(api.id, {
+    name: 'API v2',
+    description: 'Updated backend API'
+  });
+  
+  // Delete with cascade
+  await deleteResource(api.id, true); // Deletes API and Frontend
+}
+```
 
 ## Troubleshooting
 

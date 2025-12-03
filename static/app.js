@@ -325,7 +325,9 @@ function createResourceCard(resource, allResources) {
         resource.dependencies.forEach(depId => {
             const badge = document.createElement('span');
             badge.className = 'dependency-badge';
-            badge.textContent = getResourceName(depId, allResources);
+            const depName = getResourceName(depId, allResources);
+            console.log(`Looking up dependency ${depId}: found name "${depName}"`);
+            badge.textContent = depName;
             badge.setAttribute('title', `Depends on: ${depId}`);
             badge.setAttribute('data-dependency-id', depId);
             
@@ -421,7 +423,8 @@ async function handleEditResource(id) {
         
     } catch (error) {
         console.error('Error loading resource for edit:', error);
-        showError(error.message || 'Failed to load resource for editing');
+        const parsedError = parseApiError(error);
+        showError(parsedError.message);
     }
 }
 
@@ -440,15 +443,17 @@ async function handleDeleteResource(id) {
         
     } catch (error) {
         console.error('Error loading resource for delete:', error);
-        showError(error.message || 'Failed to load resource for deletion');
+        const parsedError = parseApiError(error);
+        showError(parsedError.message);
     }
 }
 
 /**
  * Show error message
  * @param {string} message - Error message
+ * @param {Object} fieldErrors - Optional field-specific errors for inline display
  */
-function showError(message) {
+function showError(message, fieldErrors = null) {
     const messageContainer = document.getElementById('messageContainer');
     if (messageContainer) {
         messageContainer.textContent = message;
@@ -459,6 +464,84 @@ function showError(message) {
             messageContainer.classList.remove('show');
         }, 5000);
     }
+    
+    // Display inline field errors if provided
+    if (fieldErrors) {
+        displayFieldErrors(fieldErrors);
+    }
+}
+
+/**
+ * Display field-specific validation errors inline on forms
+ * @param {Object} fieldErrors - Object mapping field names to error messages
+ */
+function displayFieldErrors(fieldErrors) {
+    // Clear any existing field errors first
+    clearFormErrors();
+    
+    // Map of field names to their error element IDs
+    const fieldErrorMap = {
+        'name': 'nameError',
+        'description': 'descriptionError',
+        'dependencies': 'dependenciesError'
+    };
+    
+    // Display each field error
+    for (const [field, errorMessage] of Object.entries(fieldErrors)) {
+        const errorElementId = fieldErrorMap[field];
+        if (errorElementId) {
+            const errorElement = document.getElementById(errorElementId);
+            const inputElement = document.getElementById(`resource${field.charAt(0).toUpperCase() + field.slice(1)}`);
+            
+            if (errorElement) {
+                errorElement.textContent = errorMessage;
+            }
+            
+            if (inputElement) {
+                inputElement.classList.add('error');
+            }
+        }
+    }
+}
+
+/**
+ * Parse API error response and extract field-specific errors
+ * @param {Error} error - Error object from API call
+ * @returns {Object} Object with message and optional fieldErrors
+ */
+function parseApiError(error) {
+    const result = {
+        message: error.message || 'An error occurred',
+        fieldErrors: null
+    };
+    
+    // Try to extract field-specific errors from common API error formats
+    const errorMessage = error.message || '';
+    
+    // Check for circular dependency errors
+    if (errorMessage.toLowerCase().includes('circular')) {
+        result.fieldErrors = {
+            dependencies: 'Circular dependency detected'
+        };
+    }
+    
+    // Check for validation errors mentioning specific fields
+    if (errorMessage.toLowerCase().includes('name')) {
+        result.fieldErrors = result.fieldErrors || {};
+        result.fieldErrors.name = errorMessage;
+    }
+    
+    if (errorMessage.toLowerCase().includes('description')) {
+        result.fieldErrors = result.fieldErrors || {};
+        result.fieldErrors.description = errorMessage;
+    }
+    
+    if (errorMessage.toLowerCase().includes('dependencies') || errorMessage.toLowerCase().includes('dependency')) {
+        result.fieldErrors = result.fieldErrors || {};
+        result.fieldErrors.dependencies = errorMessage;
+    }
+    
+    return result;
 }
 
 /**
@@ -475,6 +558,23 @@ function showSuccess(message) {
         setTimeout(() => {
             messageContainer.classList.remove('show');
         }, 3000);
+    }
+}
+
+/**
+ * Show warning message
+ * @param {string} message - Warning message
+ */
+function showWarning(message) {
+    const messageContainer = document.getElementById('messageContainer');
+    if (messageContainer) {
+        messageContainer.textContent = message;
+        messageContainer.className = 'message-container warning show';
+        
+        // Auto-dismiss after 4 seconds
+        setTimeout(() => {
+            messageContainer.classList.remove('show');
+        }, 4000);
     }
 }
 
@@ -771,16 +871,10 @@ async function handleCreateResource(event) {
     } catch (error) {
         console.error('Error creating resource:', error);
         
-        // Show error message
-        showError(error.message || 'Failed to create resource');
+        // Parse error and display with field-specific errors if available
+        const parsedError = parseApiError(error);
+        showError(parsedError.message, parsedError.fieldErrors);
         
-        // If it's a validation error from the API, try to display field-specific errors
-        if (error.message && error.message.includes('validation')) {
-            const dependenciesError = document.getElementById('dependenciesError');
-            if (dependenciesError && error.message.includes('circular')) {
-                dependenciesError.textContent = 'Circular dependency detected';
-            }
-        }
     } finally {
         // Restore button state
         if (submitButton) {
@@ -855,16 +949,10 @@ async function handleUpdateResource(event) {
     } catch (error) {
         console.error('Error updating resource:', error);
         
-        // Show error message
-        showError(error.message || 'Failed to update resource');
+        // Parse error and display with field-specific errors if available
+        const parsedError = parseApiError(error);
+        showError(parsedError.message, parsedError.fieldErrors);
         
-        // If it's a validation error from the API, try to display field-specific errors
-        if (error.message && error.message.includes('validation')) {
-            const dependenciesError = document.getElementById('dependenciesError');
-            if (dependenciesError && error.message.includes('circular')) {
-                dependenciesError.textContent = 'Circular dependency detected';
-            }
-        }
     } finally {
         // Restore button state
         if (submitButton) {
@@ -979,8 +1067,9 @@ async function handleConfirmDelete() {
     } catch (error) {
         console.error('Error deleting resource:', error);
         
-        // Show error message
-        showError(error.message || 'Failed to delete resource');
+        // Parse error and display
+        const parsedError = parseApiError(error);
+        showError(parsedError.message);
         
     } finally {
         // Restore button state
@@ -1004,21 +1093,23 @@ async function performSearch(query) {
     try {
         showLoading();
         
+        // Fetch all resources first (for dependency name lookup)
+        const allResources = await fetchResources();
+        console.log(`Fetched ${allResources.length} resources for name lookup`);
+        
         // Call the search API with the query
         const results = await searchResources(query);
+        console.log(`Search returned ${results.length} results`);
         
-        // Display results in topological order
-        renderSearchResults(results, query);
+        // Display results in topological order, passing all resources for name lookup
+        renderSearchResults(results, query, allResources);
         
     } catch (error) {
         console.error('Error performing search:', error);
         
-        // Check if it's a circular dependency error
-        if (error.message && error.message.toLowerCase().includes('circular')) {
-            showError('Circular dependency detected: ' + error.message);
-        } else {
-            showError(error.message || 'Failed to search resources');
-        }
+        // Parse error and display
+        const parsedError = parseApiError(error);
+        showError(parsedError.message);
         
         // Show empty state on error
         renderResources([]);
@@ -1031,8 +1122,9 @@ async function performSearch(query) {
  * Render search results with topological order indicators
  * @param {Array} resources - Array of resource objects in topological order
  * @param {string} query - The search query used
+ * @param {Array} allResources - All resources (for dependency name lookup)
  */
-function renderSearchResults(resources, query) {
+function renderSearchResults(resources, query, allResources = null) {
     const resourceList = document.getElementById('resourceList');
     const emptyState = document.getElementById('emptyState');
     const resourceSection = document.querySelector('.resource-section h2');
@@ -1041,6 +1133,9 @@ function renderSearchResults(resources, query) {
         console.error('Required DOM elements not found');
         return;
     }
+    
+    // Use allResources if provided, otherwise use resources for name lookup
+    const resourcesForLookup = allResources || resources;
     
     // Update section title to indicate search/sort mode
     if (resourceSection) {
@@ -1073,7 +1168,8 @@ function renderSearchResults(resources, query) {
     
     // Create and append resource cards with topological order indicators
     resources.forEach((resource, index) => {
-        const card = createResourceCard(resource, resources);
+        // Use allResources for dependency name lookup
+        const card = createResourceCard(resource, resourcesForLookup);
         
         // Add topological order number badge
         const orderBadge = document.createElement('div');
