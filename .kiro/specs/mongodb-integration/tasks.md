@@ -94,7 +94,7 @@
   - **Validates: Requirements 3.1**
 
 - [ ] 6. Create database factory for backend selection
-- [ ] 6.1 Implement database factory
+- [x] 6.1 Implement database factory
   - Create `app/database_factory.py` with `DatabaseFactory` class
   - Implement `get_database_type()` to read `DATABASE_TYPE` environment variable
   - Implement `get_db()` dependency function that returns appropriate session/client based on configuration
@@ -103,17 +103,17 @@
   - Implement `close_database()` function that closes connections for the configured backend
   - _Requirements: 1.1, 1.2, 1.3, 2.1_
 
-- [ ]* 6.2 Write property test for backend abstraction transparency
+- [x] 6.2 Write property test for backend abstraction transparency
   - **Property 4: Backend abstraction transparency (both backends)**
   - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6**
 
-- [ ] 7. Update service layer to use database factory
+- [x] 7. Update service layer to use database factory
   - Update `app/services/resource_service.py` to use `get_repository()` from database factory
   - Ensure `ResourceService` works with both repository implementations
   - Verify no backend-specific code in service layer
   - _Requirements: 2.1_
 
-- [ ] 8. Update API layer to use database factory
+- [x] 8. Update API layer to use database factory
   - Update `main.py` to use `init_database()` and `close_database()` from factory
   - Update routers to use `get_db()` dependency from factory
   - Ensure startup and shutdown events handle both backends

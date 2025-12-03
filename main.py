@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.database_sqlalchemy import init_sqlalchemy_db as init_db
+from app.database_factory import init_database, close_database
 from app.error_handlers import register_exception_handlers
 from app.routers import resources
 
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize database
     logger.info("Starting up application...")
     try:
-        await init_db()
+        await init_database()
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}", exc_info=True)
@@ -48,6 +48,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down application...")
+    await close_database()
 
 
 # Create FastAPI application instance

@@ -1,9 +1,10 @@
 """FastAPI router for resource endpoints"""
 from fastapi import APIRouter, Depends, Query, status
+from typing import List, Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.database_sqlalchemy import get_sqlalchemy_db as get_db
+from app.database_factory import get_db
 from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse, ErrorResponse
 from app.services.resource_service import ResourceService
 
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/api", tags=["resources"])
 )
 async def create_resource(
     data: ResourceCreate,
-    db: AsyncSession = Depends(get_db)
+    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
 ) -> ResourceResponse:
     """
     Create a new resource.
@@ -48,7 +49,7 @@ async def create_resource(
     }
 )
 async def list_resources(
-    db: AsyncSession = Depends(get_db)
+    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
 ) -> List[ResourceResponse]:
     """
     Get all resources.
@@ -72,7 +73,7 @@ async def list_resources(
 )
 async def get_resource(
     resource_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
 ) -> ResourceResponse:
     """
     Get a single resource by ID.
@@ -101,7 +102,7 @@ async def get_resource(
 async def update_resource(
     resource_id: str,
     data: ResourceUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
 ) -> ResourceResponse:
     """
     Update an existing resource.
@@ -130,7 +131,7 @@ async def update_resource(
 async def delete_resource(
     resource_id: str,
     cascade: bool = Query(False, description="Delete all downstream dependencies"),
-    db: AsyncSession = Depends(get_db)
+    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
 ) -> None:
     """
     Delete a resource.
@@ -157,7 +158,7 @@ async def delete_resource(
 )
 async def search_resources(
     q: Optional[str] = Query(None, description="Search query for name or description"),
-    db: AsyncSession = Depends(get_db)
+    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
 ) -> List[ResourceResponse]:
     """
     Search for resources and return them in topological order.

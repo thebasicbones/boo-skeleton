@@ -2,6 +2,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from uuid import uuid4
+import re
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.errors import (
     ConnectionFailure,
@@ -402,8 +403,12 @@ class MongoDBResourceRepository(BaseResourceRepository):
         try:
             # Build search filter
             if query and query.strip():
+                # Escape regex special characters to prevent regex parsing errors
+                # This ensures that special characters like '[', ']', '(', ')' are treated literally
+                escaped_query = re.escape(query.strip())
+                
                 # Case-insensitive regex search on name and description
-                search_pattern = {'$regex': query.strip(), '$options': 'i'}
+                search_pattern = {'$regex': escaped_query, '$options': 'i'}
                 filter_query = {
                     '$or': [
                         {'name': search_pattern},

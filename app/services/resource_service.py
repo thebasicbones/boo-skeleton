@@ -1,20 +1,26 @@
 """Resource Service for business logic and coordination"""
-from typing import List, Optional
+from typing import List, Optional, Union, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from app.database_factory import get_repository
+from app.repositories.base_resource_repository import BaseResourceRepository
 from app.services.topological_sort_service import TopologicalSortService
 from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse
-from app.models.sqlalchemy_resource import Resource
 from app.exceptions import ResourceNotFoundError, ValidationError, CircularDependencyError
 
 
 class ResourceService:
     """Service class for resource business logic"""
     
-    def __init__(self, db: AsyncSession):
-        """Initialize service with database session"""
+    def __init__(self, db: Union[AsyncSession, AsyncIOMotorDatabase]):
+        """
+        Initialize service with database session or database instance.
+        
+        Args:
+            db: Database connection (AsyncSession for SQLite or AsyncIOMotorDatabase for MongoDB)
+        """
         self.db = db
-        self.repository = SQLAlchemyResourceRepository(db)
+        self.repository = get_repository(db)
         self.topo_service = TopologicalSortService()
     
     async def create_resource(self, data: ResourceCreate) -> ResourceResponse:
@@ -40,8 +46,8 @@ class ResourceService:
         # Convert to dict format for topological sort validation
         resource_dicts = [
             {
-                'id': r.id,
-                'dependencies': [d.id for d in r.dependencies]
+                'id': self._get_resource_id(r),
+                'dependencies': self._get_resource_dependencies(r)
             }
             for r in existing_resources
         ]
@@ -127,8 +133,8 @@ class ResourceService:
             # Convert to dict format for topological sort validation
             resource_dicts = [
                 {
-                    'id': r.id,
-                    'dependencies': [d.id for d in r.dependencies]
+                    'id': self._get_resource_id(r),
+                    'dependencies': self._get_resource_dependencies(r)
                 }
                 for r in all_resources
             ]
@@ -190,12 +196,12 @@ class ResourceService:
         # Convert to dict format for topological sort
         resource_dicts = [
             {
-                'id': r.id,
-                'name': r.name,
-                'description': r.description,
-                'dependencies': [d.id for d in r.dependencies],
-                'created_at': r.created_at,
-                'updated_at': r.updated_at
+                'id': self._get_resource_id(r),
+                'name': self._get_resource_name(r),
+                'description': self._get_resource_description(r),
+                'dependencies': self._get_resource_dependencies(r),
+                'created_at': self._get_resource_created_at(r),
+                'updated_at': self._get_resource_updated_at(r)
             }
             for r in resources
         ]
@@ -245,21 +251,56 @@ class ResourceService:
                 )
     
     @staticmethod
-    def _resource_to_response(resource: Resource) -> ResourceResponse:
+    def _get_resource_id(resource: Union[Dict[str, Any], Any]) -> str:
+        """Extract resource ID from either dict or object."""
+        return resource['id'] if isinstance(resource, dict) else resource.id
+    
+    @staticmethod
+    def _get_resource_name(resource: Union[Dict[str, Any], Any]) -> str:
+        """Extract resource name from either dict or object."""
+        return resource['name'] if isinstance(resource, dict) else resource.name
+    
+    @staticmethod
+    def _get_resource_description(resource: Union[Dict[str, Any], Any]) -> Optional[str]:
+        """Extract resource description from either dict or object."""
+        return resource.get('description') if isinstance(resource, dict) else resource.description
+    
+    @staticmethod
+    def _get_resource_dependencies(resource: Union[Dict[str, Any], Any]) -> List[str]:
+        """Extract resource dependencies from either dict or object."""
+        if isinstance(resource, dict):
+            return resource.get('dependencies', [])
+        else:
+            return [d.id for d in resource.dependencies]
+    
+    @staticmethod
+    def _get_resource_created_at(resource: Union[Dict[str, Any], Any]):
+        """Extract resource created_at from either dict or object."""
+        return resource['created_at'] if isinstance(resource, dict) else resource.created_at
+    
+    @staticmethod
+    def _get_resource_updated_at(resource: Union[Dict[str, Any], Any]):
+        """Extract resource updated_at from either dict or object."""
+        return resource['updated_at'] if isinstance(resource, dict) else resource.updated_at
+    
+    def _resource_to_response(self, resource: Union[Dict[str, Any], Any]) -> ResourceResponse:
         """
-        Convert a Resource model to ResourceResponse schema.
+        Convert a resource (dict or model object) to ResourceResponse schema.
+        
+        This method works with both MongoDB dictionaries and SQLAlchemy model objects,
+        making the service layer backend-agnostic.
         
         Args:
-            resource: Resource model instance
+            resource: Resource data (dict from MongoDB or model object from SQLAlchemy)
             
         Returns:
             ResourceResponse schema
         """
         return ResourceResponse(
-            id=resource.id,
-            name=resource.name,
-            description=resource.description,
-            dependencies=[d.id for d in resource.dependencies],
-            created_at=resource.created_at,
-            updated_at=resource.updated_at
+            id=self._get_resource_id(resource),
+            name=self._get_resource_name(resource),
+            description=self._get_resource_description(resource),
+            dependencies=self._get_resource_dependencies(resource),
+            created_at=self._get_resource_created_at(resource),
+            updated_at=self._get_resource_updated_at(resource)
         )
