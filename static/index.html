@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Manager</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css?v=10">
 </head>
 <body>
     <!-- Header Section -->
     <header class="header">
         <div class="container">
             <h1>Resource Manager</h1>
-            <p class="subtitle">Manage resources with dependency tracking</p>
+            <p class="subtitle">Manage resources with dependency tracking and DAG visualization</p>
         </div>
     </header>
 
@@ -48,7 +48,44 @@
 
             <!-- Resource List/Grid Container -->
             <section class="resource-section">
-                <h2>Resources</h2>
+                <div class="section-header">
+                    <h2>Resources</h2>
+                    
+                    <!-- DAG Sort Controls -->
+                    <div class="sort-controls">
+                        <label for="dagSortOrder">Sort DAGs by:</label>
+                        <select id="dagSortOrder" class="sort-select">
+                            <option value="topological">Topological Order (Default)</option>
+                            <option value="created-asc">Created Date (Oldest First)</option>
+                            <option value="created-desc">Created Date (Newest First)</option>
+                            <option value="updated-asc">Updated Date (Oldest First)</option>
+                            <option value="updated-desc">Updated Date (Newest First)</option>
+                            <option value="name-asc">Root Name (A-Z)</option>
+                            <option value="name-desc">Root Name (Z-A)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Depth Legend -->
+                <div class="depth-legend">
+                    <div class="depth-legend-item">
+                        <div class="depth-legend-color"></div>
+                        <span><strong>Level 0:</strong> Root (No Dependencies)</span>
+                    </div>
+                    <div class="depth-legend-item">
+                        <div class="depth-legend-color"></div>
+                        <span><strong>Level 1:</strong> Direct Dependencies</span>
+                    </div>
+                    <div class="depth-legend-item">
+                        <div class="depth-legend-color"></div>
+                        <span><strong>Level 2:</strong> Second-Level Dependencies</span>
+                    </div>
+                    <div class="depth-legend-item">
+                        <div class="depth-legend-color"></div>
+                        <span><strong>Level 3+:</strong> Deep Dependencies</span>
+                    </div>
+                </div>
+                
                 <div id="resourceList" class="resource-list">
                     <!-- Resources will be dynamically inserted here -->
                 </div>
@@ -152,6 +189,6 @@
     </div>
 
     <!-- Link JavaScript -->
-    <script src="/static/app.js?v=2"></script>
+    <script src="/static/app.js?v=11"></script>
 </body>
 </html>

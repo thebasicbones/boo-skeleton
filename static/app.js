@@ -400,12 +400,28 @@ function renderResources(resources) {
 
 /**
  * Load and display all resources
- * Now uses search with empty query to get topologically sorted results
+ * Now uses DAG grouping with selected sort order
  */
 async function loadResources() {
-    const searchInput = document.getElementById('searchInput');
-    const query = searchInput ? searchInput.value : '';
-    await performSearch(query);
+    try {
+        showLoading();
+        
+        const sortSelect = document.getElementById('dagSortOrder');
+        const sortOrder = sortSelect ? sortSelect.value : 'topological';
+        
+        // Fetch all resources
+        const resources = await fetchResources();
+        
+        // Render grouped by DAG with selected sort order
+        renderResourcesByDAG(resources, sortOrder);
+        
+    } catch (error) {
+        console.error('Error loading resources:', error);
+        showError('Failed to load resources');
+        renderResourcesByDAG([]);
+    } finally {
+        hideLoading();
+    }
 }
 
 /**
@@ -1093,16 +1109,24 @@ async function performSearch(query) {
     try {
         showLoading();
         
+        // If no query, just load all resources with DAG grouping
+        if (!query || !query.trim()) {
+            await loadResources();
+            return;
+        }
+        
         // Fetch all resources first (for dependency name lookup)
         const allResources = await fetchResources();
         console.log(`Fetched ${allResources.length} resources for name lookup`);
         
         // Call the search API with the query
         const results = await searchResources(query);
-        console.log(`Search returned ${results.length} results`);
+        console.log(`Search returned ${results.length} results for query: "${query}"`);
         
-        // Display results in topological order, passing all resources for name lookup
-        renderSearchResults(results, query, allResources);
+        // Display search results with DAG grouping
+        const sortSelect = document.getElementById('dagSortOrder');
+        const sortOrder = sortSelect ? sortSelect.value : 'topological';
+        renderResourcesByDAG(results, sortOrder);
         
     } catch (error) {
         console.error('Error performing search:', error);
@@ -1112,7 +1136,7 @@ async function performSearch(query) {
         showError(parsedError.message);
         
         // Show empty state on error
-        renderResources([]);
+        renderResourcesByDAG([]);
     } finally {
         hideLoading();
     }
@@ -1123,8 +1147,15 @@ async function performSearch(query) {
  * @param {Array} resources - Array of resource objects in topological order
  * @param {string} query - The search query used
  * @param {Array} allResources - All resources (for dependency name lookup)
+ * @deprecated Use renderResourcesByDAG instead
  */
 function renderSearchResults(resources, query, allResources = null) {
+    console.log(`renderSearchResults (deprecated) called - redirecting to renderResourcesByDAG`);
+    const sortSelect = document.getElementById('dagSortOrder');
+    const sortOrder = sortSelect ? sortSelect.value : 'topological';
+    renderResourcesByDAG(resources, sortOrder);
+    return;
+    
     const resourceList = document.getElementById('resourceList');
     const emptyState = document.getElementById('emptyState');
     const resourceSection = document.querySelector('.resource-section h2');
@@ -1229,8 +1260,11 @@ function handleSearchButtonClick() {
  * Initialize the application
  */
 function init() {
-    // Load resources on page load (using search with empty query for topological sort)
-    performSearch('');
+    // Set up DAG sort order handler
+    handleDAGSortChange();
+    
+    // Load resources on page load with DAG grouping
+    loadResources();
     
     // Set up event listeners
     setupEventListeners();
@@ -1350,4 +1384,534 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
+}
+
+
+// ===================================
+// DAG Grouping and Sorting Functions
+// ===================================
+
+/**
+ * Identify disconnected DAGs in the resource graph
+ * @param {Array} resources - All resources
+ * @returns {Array} Array of DAG groups, each containing resources
+ */
+function identifyDAGs(resources) {
+    if (!resources || resources.length === 0) {
+        return [];
+    }
+    
+    const visited = new Set();
+    const dags = [];
+    
+    // Build adjacency list (bidirectional for component detection)
+    const graph = {};
+    resources.forEach(r => {
+        graph[r.id] = new Set();
+    });
+    
+    resources.forEach(resource => {
+        const deps = resource.dependencies || [];
+        deps.forEach(depId => {
+            if (graph[resource.id]) graph[resource.id].add(depId);
+            if (graph[depId]) graph[depId].add(resource.id);
+        });
+    });
+    
+    // DFS to find connected components
+    function dfs(nodeId, component) {
+        if (visited.has(nodeId)) return;
+        visited.add(nodeId);
+        
+        const resource = resources.find(r => r.id === nodeId);
+        if (resource) {
+            component.push(resource);
+        }
+        
+        const neighbors = graph[nodeId] || new Set();
+        neighbors.forEach(neighborId => {
+            dfs(neighborId, component);
+        });
+    }
+    
+    // Find all connected components (DAGs)
+    resources.forEach(resource => {
+        if (!visited.has(resource.id)) {
+            const component = [];
+            dfs(resource.id, component);
+            if (component.length > 0) {
+                dags.push(component);
+            }
+        }
+    });
+    
+    return dags;
+}
+
+/**
+ * Find root nodes (nodes with no dependencies) in a DAG
+ * @param {Array} dagResources - Resources in a DAG
+ * @returns {Array} Root resources
+ */
+function findRootNodes(dagResources) {
+    return dagResources.filter(r => !r.dependencies || r.dependencies.length === 0);
+}
+
+/**
+ * Sort DAGs based on the selected sort order
+ * @param {Array} dags - Array of DAG groups
+ * @param {string} sortOrder - Sort order option
+ * @returns {Array} Sorted DAGs
+ */
+function sortDAGs(dags, sortOrder) {
+    const sortedDags = [...dags];
+    
+    switch (sortOrder) {
+        case 'created-asc':
+            // Sort by earliest created date of root nodes
+            sortedDags.sort((a, b) => {
+                const rootsA = findRootNodes(a);
+                const rootsB = findRootNodes(b);
+                const minDateA = Math.min(...rootsA.map(r => new Date(r.created_at).getTime()));
+                const minDateB = Math.min(...rootsB.map(r => new Date(r.created_at).getTime()));
+                return minDateA - minDateB;
+            });
+            break;
+            
+        case 'created-desc':
+            // Sort by latest created date of root nodes
+            sortedDags.sort((a, b) => {
+                const rootsA = findRootNodes(a);
+                const rootsB = findRootNodes(b);
+                const maxDateA = Math.max(...rootsA.map(r => new Date(r.created_at).getTime()));
+                const maxDateB = Math.max(...rootsB.map(r => new Date(r.created_at).getTime()));
+                return maxDateB - maxDateA;
+            });
+            break;
+            
+        case 'updated-asc':
+            // Sort by earliest updated date in the entire DAG
+            sortedDags.sort((a, b) => {
+                const minDateA = Math.min(...a.map(r => new Date(r.updated_at).getTime()));
+                const minDateB = Math.min(...b.map(r => new Date(r.updated_at).getTime()));
+                return minDateA - minDateB;
+            });
+            break;
+            
+        case 'updated-desc':
+            // Sort by latest updated date in the entire DAG
+            sortedDags.sort((a, b) => {
+                const maxDateA = Math.max(...a.map(r => new Date(r.updated_at).getTime()));
+                const maxDateB = Math.max(...b.map(r => new Date(r.updated_at).getTime()));
+                return maxDateB - maxDateA;
+            });
+            break;
+            
+        case 'name-asc':
+            // Sort by root node name (A-Z)
+            sortedDags.sort((a, b) => {
+                const rootsA = findRootNodes(a);
+                const rootsB = findRootNodes(b);
+                const nameA = rootsA.length > 0 ? rootsA[0].name.toLowerCase() : '';
+                const nameB = rootsB.length > 0 ? rootsB[0].name.toLowerCase() : '';
+                return nameA.localeCompare(nameB);
+            });
+            break;
+            
+        case 'name-desc':
+            // Sort by root node name (Z-A)
+            sortedDags.sort((a, b) => {
+                const rootsA = findRootNodes(a);
+                const rootsB = findRootNodes(b);
+                const nameA = rootsA.length > 0 ? rootsA[0].name.toLowerCase() : '';
+                const nameB = rootsB.length > 0 ? rootsB[0].name.toLowerCase() : '';
+                return nameB.localeCompare(nameA);
+            });
+            break;
+            
+        case 'topological':
+        default:
+            // Keep original topological order
+            break;
+    }
+    
+    return sortedDags;
+}
+
+/**
+ * Render resources grouped by DAG
+ * @param {Array} resources - All resources in topological order
+ * @param {string} sortOrder - Sort order option
+ */
+function renderResourcesByDAG(resources, sortOrder = 'topological') {
+    console.log(`renderResourcesByDAG called with ${resources?.length || 0} resources, sortOrder: ${sortOrder}`);
+    
+    const resourceList = document.getElementById('resourceList');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (!resourceList || !emptyState) {
+        console.error('Required DOM elements not found');
+        return;
+    }
+    
+    // Clear existing content
+    resourceList.innerHTML = '';
+    
+    // Show empty state if no resources
+    if (!resources || resources.length === 0) {
+        resourceList.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    // Hide empty state
+    emptyState.style.display = 'none';
+    resourceList.style.display = 'block';
+    
+    // Identify DAGs
+    const dags = identifyDAGs(resources);
+    console.log(`Identified ${dags.length} DAG(s)`, dags.map(d => d.length));
+    
+    // Sort DAGs based on selected order
+    const sortedDags = sortDAGs(dags, sortOrder);
+    
+    // Render each DAG as a group
+    sortedDags.forEach((dagResources, dagIndex) => {
+        // Create DAG group container
+        const dagGroup = document.createElement('div');
+        dagGroup.className = 'dag-group';
+        
+        // Create DAG header
+        const dagHeader = document.createElement('div');
+        dagHeader.className = 'dag-group-header';
+        
+        const roots = findRootNodes(dagResources);
+        const rootNames = roots.map(r => r.name).join(', ');
+        
+        const dagTitle = document.createElement('h3');
+        dagTitle.className = 'dag-group-title';
+        dagTitle.textContent = `DAG ${dagIndex + 1}: ${rootNames || 'Unknown'}`;
+        
+        const dagInfo = document.createElement('div');
+        dagInfo.className = 'dag-group-info';
+        dagInfo.textContent = `${dagResources.length} resource${dagResources.length !== 1 ? 's' : ''}`;
+        
+        dagHeader.appendChild(dagTitle);
+        dagHeader.appendChild(dagInfo);
+        
+        dagGroup.appendChild(dagHeader);
+        
+        // Add view toggle buttons
+        addViewToggle(dagGroup, dagIndex);
+        
+        // Create tree visualization
+        const treeViz = createTreeVisualization(dagResources, dagIndex);
+        dagGroup.appendChild(treeViz);
+        
+        // Create resources container for this DAG (card view)
+        const dagResourcesContainer = document.createElement('div');
+        dagResourcesContainer.className = 'dag-group-resources hidden';
+        
+        // Sort resources within DAG topologically
+        const sortedDagResources = topologicalSortWithinDAG(dagResources);
+        
+        // Render each resource in the DAG
+        sortedDagResources.forEach((resource, index) => {
+            const card = createResourceCard(resource, resources);
+            
+            // Add topological order badge within DAG
+            const orderBadge = document.createElement('div');
+            orderBadge.className = 'topological-order-badge';
+            orderBadge.textContent = `#${index + 1}`;
+            orderBadge.setAttribute('title', `Position in DAG: ${index + 1}`);
+            
+            card.insertBefore(orderBadge, card.firstChild);
+            dagResourcesContainer.appendChild(card);
+        });
+        
+        dagGroup.appendChild(dagResourcesContainer);
+        resourceList.appendChild(dagGroup);
+    });
+}
+
+/**
+ * Topologically sort resources within a DAG
+ * @param {Array} dagResources - Resources in a DAG
+ * @returns {Array} Topologically sorted resources
+ */
+function topologicalSortWithinDAG(dagResources) {
+    const sorted = [];
+    const visited = new Set();
+    const inDag = new Set(dagResources.map(r => r.id));
+    
+    function visit(resource) {
+        if (visited.has(resource.id)) return;
+        visited.add(resource.id);
+        
+        // Visit dependencies first (only those in this DAG)
+        const deps = (resource.dependencies || []).filter(depId => inDag.has(depId));
+        deps.forEach(depId => {
+            const depResource = dagResources.find(r => r.id === depId);
+            if (depResource) {
+                visit(depResource);
+            }
+        });
+        
+        sorted.push(resource);
+    }
+    
+    // Start with root nodes
+    const roots = findRootNodes(dagResources);
+    roots.forEach(root => visit(root));
+    
+    // Visit any remaining nodes
+    dagResources.forEach(resource => {
+        if (!visited.has(resource.id)) {
+            visit(resource);
+        }
+    });
+    
+    return sorted;
+}
+
+/**
+ * Handle DAG sort order change
+ */
+function handleDAGSortChange() {
+    const sortSelect = document.getElementById('dagSortOrder');
+    if (!sortSelect) return;
+    
+    sortSelect.addEventListener('change', async () => {
+        const sortOrder = sortSelect.value;
+        console.log(`Changing DAG sort order to: ${sortOrder}`);
+        
+        try {
+            showLoading();
+            
+            // Fetch all resources
+            const resources = await fetchResources();
+            
+            // Render with new sort order
+            renderResourcesByDAG(resources, sortOrder);
+            
+        } catch (error) {
+            console.error('Error changing sort order:', error);
+            showError('Failed to update sort order');
+        } finally {
+            hideLoading();
+        }
+    });
+}
+
+
+// ===================================
+// Tree/Graph Visualization Functions
+// ===================================
+
+/**
+ * Create a tree visualization for a DAG
+ * @param {Array} dagResources - Resources in the DAG
+ * @param {number} dagIndex - Index of the DAG
+ * @returns {HTMLElement} Tree visualization element
+ */
+function createTreeVisualization(dagResources, dagIndex) {
+    const container = document.createElement('div');
+    container.className = 'dag-visualization';
+    container.id = `dag-tree-${dagIndex}`;
+    
+    // Organize resources by depth level
+    const levels = organizeDagByLevels(dagResources);
+    const resourceMap = new Map(dagResources.map(r => [r.id, r]));
+    
+    const treeContainer = document.createElement('div');
+    treeContainer.className = 'tree-container';
+    
+    // Create each level
+    levels.forEach((levelResources, levelIndex) => {
+        const levelDiv = document.createElement('div');
+        levelDiv.className = 'tree-level';
+        levelDiv.setAttribute('data-level', levelIndex);
+        
+        levelResources.forEach(resource => {
+            const node = createTreeNode(resource, levelIndex, dagResources);
+            levelDiv.appendChild(node);
+        });
+        
+        treeContainer.appendChild(levelDiv);
+        
+        // Add arrow connector between levels
+        if (levelIndex < levels.length - 1) {
+            const connector = document.createElement('div');
+            connector.className = 'level-connector';
+            connector.innerHTML = '<div class="connector-arrow">↓</div>';
+            treeContainer.appendChild(connector);
+        }
+    });
+    
+    container.appendChild(treeContainer);
+    return container;
+}
+
+/**
+ * Organize DAG resources by depth levels
+ * @param {Array} dagResources - Resources in the DAG
+ * @returns {Array} Array of arrays, each containing resources at that level
+ */
+function organizeDagByLevels(dagResources) {
+    const levels = [];
+    const visited = new Set();
+    const resourceMap = new Map(dagResources.map(r => [r.id, r]));
+    
+    // Calculate depth for each resource
+    function getDepth(resource, visiting = new Set()) {
+        if (visiting.has(resource.id)) return 0; // Cycle detection
+        if (!resource.dependencies || resource.dependencies.length === 0) return 0;
+        
+        visiting.add(resource.id);
+        let maxDepth = 0;
+        
+        for (const depId of resource.dependencies) {
+            const dep = resourceMap.get(depId);
+            if (dep) {
+                maxDepth = Math.max(maxDepth, getDepth(dep, visiting) + 1);
+            }
+        }
+        
+        visiting.delete(resource.id);
+        return maxDepth;
+    }
+    
+    // Group resources by depth
+    const depthMap = new Map();
+    dagResources.forEach(resource => {
+        const depth = getDepth(resource);
+        if (!depthMap.has(depth)) {
+            depthMap.set(depth, []);
+        }
+        depthMap.get(depth).push(resource);
+    });
+    
+    // Convert to array of levels
+    const maxDepth = Math.max(...depthMap.keys());
+    for (let i = 0; i <= maxDepth; i++) {
+        levels.push(depthMap.get(i) || []);
+    }
+    
+    return levels;
+}
+
+/**
+ * Create a tree node element
+ * @param {Object} resource - Resource object
+ * @param {number} level - Depth level
+ * @param {Array} allResources - All resources in DAG for dependency lookup
+ * @returns {HTMLElement} Tree node element
+ */
+function createTreeNode(resource, level, allResources) {
+    const node = document.createElement('div');
+    node.className = `tree-node level-${level}`;
+    if (level === 0) {
+        node.classList.add('root');
+    }
+    node.setAttribute('data-resource-id', resource.id);
+    
+    const title = document.createElement('div');
+    title.className = 'tree-node-title';
+    title.textContent = resource.name;
+    
+    const desc = document.createElement('div');
+    desc.className = 'tree-node-desc';
+    desc.textContent = resource.description || 'No description';
+    
+    // Append title and description first
+    node.appendChild(title);
+    node.appendChild(desc);
+    
+    // Show dependencies as small badges
+    if (resource.dependencies && resource.dependencies.length > 0) {
+        const depsContainer = document.createElement('div');
+        depsContainer.className = 'tree-node-deps';
+        
+        resource.dependencies.forEach(depId => {
+            const depResource = allResources.find(r => r.id === depId);
+            if (depResource) {
+                const depBadge = document.createElement('span');
+                depBadge.className = 'tree-dep-badge';
+                depBadge.textContent = `← ${depResource.name}`;
+                depBadge.title = `Depends on: ${depResource.name}`;
+                depsContainer.appendChild(depBadge);
+            }
+        });
+        
+        node.appendChild(depsContainer);
+    }
+    
+    const badge = document.createElement('div');
+    badge.className = 'tree-node-badge';
+    badge.textContent = level === 0 ? '🌱 ROOT' : `🍃 Level ${level}`;
+    
+    node.appendChild(badge);
+    
+    // Click to scroll to card view
+    node.onclick = () => {
+        const card = document.querySelector(`.resource-card[data-resource-id="${resource.id}"]`);
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.animation = 'none';
+            setTimeout(() => {
+                card.style.animation = 'highlight 1s ease-in-out';
+            }, 10);
+        }
+    };
+    
+    return node;
+}
+
+/**
+ * Add view toggle buttons to DAG group
+ * @param {HTMLElement} dagGroup - DAG group container
+ * @param {number} dagIndex - Index of the DAG
+ */
+function addViewToggle(dagGroup, dagIndex) {
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'view-toggle';
+    
+    const treeBtn = document.createElement('button');
+    treeBtn.className = 'view-toggle-btn tree-view active';
+    treeBtn.textContent = 'Tree View';
+    treeBtn.onclick = () => {
+        treeBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+        
+        const tree = dagGroup.querySelector(`#dag-tree-${dagIndex}`);
+        const grid = dagGroup.querySelector('.dag-group-resources');
+        
+        if (tree) tree.classList.remove('hidden');
+        if (grid) grid.classList.add('hidden');
+    };
+    
+    const gridBtn = document.createElement('button');
+    gridBtn.className = 'view-toggle-btn grid-view';
+    gridBtn.textContent = 'Card View';
+    gridBtn.onclick = () => {
+        gridBtn.classList.add('active');
+        treeBtn.classList.remove('active');
+        
+        const tree = dagGroup.querySelector(`#dag-tree-${dagIndex}`);
+        const grid = dagGroup.querySelector('.dag-group-resources');
+        
+        if (tree) tree.classList.add('hidden');
+        if (grid) grid.classList.remove('hidden');
+    };
+    
+    toggleContainer.appendChild(treeBtn);
+    toggleContainer.appendChild(gridBtn);
+    
+    // Insert after header
+    const header = dagGroup.querySelector('.dag-group-header');
+    if (header && header.nextSibling) {
+        dagGroup.insertBefore(toggleContainer, header.nextSibling);
+    } else {
+        dagGroup.appendChild(toggleContainer);
+    }
 }

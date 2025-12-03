@@ -1,0 +1,202 @@
+[
+  {
+    "id": "49db95a2-d03d-4fa1-81cd-45655db7d29b",
+    "name": "CS101 - Intro to Programming",
+    "description": "Learn basic programming concepts with Python",
+    "dependencies": [],
+    "created_at": "2025-12-03T17:42:34.206492",
+    "updated_at": "2025-12-03T17:42:34.206503"
+  },
+  {
+    "id": "527fdf78-83ac-444f-a9f7-486303a77220",
+    "name": "CS102 - Data Structures",
+    "description": "Arrays, linked lists, trees, and graphs",
+    "dependencies": [
+      "49db95a2-d03d-4fa1-81cd-45655db7d29b"
+    ],
+    "created_at": "2025-12-03T17:42:34.223900",
+    "updated_at": "2025-12-03T17:42:34.223904"
+  },
+  {
+    "id": "03f34967-a3f6-442f-b04a-02e9b25548cc",
+    "name": "CS201 - Algorithms",
+    "description": "Algorithm design and analysis",
+    "dependencies": [
+      "527fdf78-83ac-444f-a9f7-486303a77220"
+    ],
+    "created_at": "2025-12-03T17:42:34.233659",
+    "updated_at": "2025-12-03T17:42:34.233661"
+  },
+  {
+    "id": "8f47b9b6-da6b-49aa-92d8-859230f894dd",
+    "name": "CS301 - Advanced Algorithms",
+    "description": "Dynamic programming, graph algorithms, NP-completeness",
+    "dependencies": [
+      "03f34967-a3f6-442f-b04a-02e9b25548cc"
+    ],
+    "created_at": "2025-12-03T17:42:34.246989",
+    "updated_at": "2025-12-03T17:42:34.246992"
+  },
+  {
+    "id": "48befade-d936-4c90-bbb9-8d6cbba1cd9e",
+    "name": "MATH101 - Calculus I",
+    "description": "Limits, derivatives, and integrals",
+    "dependencies": [],
+    "created_at": "2025-12-03T17:42:34.253139",
+    "updated_at": "2025-12-03T17:42:34.253141"
+  },
+  {
+    "id": "2fbc9510-d195-413c-9a39-399ba0190d39",
+    "name": "MATH201 - Linear Algebra",
+    "description": "Vectors, matrices, and linear transformations",
+    "dependencies": [
+      "48befade-d936-4c90-bbb9-8d6cbba1cd9e"
+    ],
+    "created_at": "2025-12-03T17:42:34.260746",
+    "updated_at": "2025-12-03T17:42:34.260749"
+  },
+  {
+    "id": "2123a8ce-803b-4861-b59a-85d674b1dbec",
+    "name": "MATH301 - Probability & Statistics",
+    "description": "Probability theory and statistical inference",
+    "dependencies": [
+      "2fbc9510-d195-413c-9a39-399ba0190d39"
+    ],
+    "created_at": "2025-12-03T17:42:34.269036",
+    "updated_at": "2025-12-03T17:42:34.269038"
+  },
+  {
+    "id": "54dd3d31-f0a2-4dd9-a685-4dde55bd0008",
+    "name": "WEB101 - HTML & CSS",
+    "description": "Building web pages with HTML and CSS",
+    "dependencies": [],
+    "created_at": "2025-12-03T17:42:34.274734",
+    "updated_at": "2025-12-03T17:42:34.274736"
+  },
+  {
+    "id": "19a08d56-1450-4bed-84ef-3df8dfbe9cbf",
+    "name": "WEB201 - JavaScript",
+    "description": "Client-side programming with JavaScript",
+    "dependencies": [
+      "54dd3d31-f0a2-4dd9-a685-4dde55bd0008"
+    ],
+    "created_at": "2025-12-03T17:42:34.283278",
+    "updated_at": "2025-12-03T17:42:34.283280"
+  },
+  {
+    "id": "c06242a1-6130-4ae8-abbf-51cafeaddeda",
+    "name": "WEB301 - React & Modern Frameworks",
+    "description": "Building SPAs with React and modern tools",
+    "dependencies": [
+      "19a08d56-1450-4bed-84ef-3df8dfbe9cbf"
+    ],
+    "created_at": "2025-12-03T17:42:34.292097",
+    "updated_at": "2025-12-03T17:42:34.292101"
+  },
+  {
+    "id": "e2f53003-3774-48c2-8e3a-08fb6e3b930a",
+    "name": "DB101 - Database Fundamentals",
+    "description": "Relational databases and SQL basics",
+    "dependencies": [],
+    "created_at": "2025-12-03T17:42:34.301803",
+    "updated_at": "2025-12-03T17:42:34.301806"
+  },
+  {
+    "id": "60c36cd4-35d3-475a-b304-4903036cd0c6",
+    "name": "DB201 - Advanced Databases",
+    "description": "NoSQL, indexing, and query optimization",
+    "dependencies": [
+      "e2f53003-3774-48c2-8e3a-08fb6e3b930a"
+    ],
+    "created_at": "2025-12-03T17:42:34.309181",
+    "updated_at": "2025-12-03T17:42:34.309184"
+  },
+  {
+    "id": "b3690775-5c51-4fed-a06e-1ef315535985",
+    "name": "ML401 - Machine Learning",
+    "description": "Supervised and unsupervised learning algorithms",
+    "dependencies": [
+      "03f34967-a3f6-442f-b04a-02e9b25548cc",
+      "2123a8ce-803b-4861-b59a-85d674b1dbec",
+      "527fdf78-83ac-444f-a9f7-486303a77220"
+    ],
+    "created_at": "2025-12-03T17:42:34.321305",
+    "updated_at": "2025-12-03T17:42:34.321308"
+  },
+  {
+    "id": "b77c6d35-4b0e-46a0-a9e7-6ad8d7a0a799",
+    "name": "FULLSTACK401 - Full Stack Development",
+    "description": "Building complete web applications",
+    "dependencies": [
+      "527fdf78-83ac-444f-a9f7-486303a77220",
+      "60c36cd4-35d3-475a-b304-4903036cd0c6",
+      "c06242a1-6130-4ae8-abbf-51cafeaddeda"
+    ],
+    "created_at": "2025-12-03T17:42:34.333047",
+    "updated_at": "2025-12-03T17:42:34.333050"
+  },
+  {
+    "id": "dcb06c4f-bc0a-4f26-b44b-f5ba14507ede",
+    "name": "ART101 - Drawing Fundamentals",
+    "description": "Basic drawing techniques and principles",
+    "dependencies": [],
+    "created_at": "2025-12-03T18:08:14.134398",
+    "updated_at": "2025-12-03T18:08:14.134404"
+  },
+  {
+    "id": "146b6373-f353-456f-ac18-41feedee0bc5",
+    "name": "ART201 - Digital Art",
+    "description": "Digital illustration and design",
+    "dependencies": [
+      "dcb06c4f-bc0a-4f26-b44b-f5ba14507ede"
+    ],
+    "created_at": "2025-12-03T18:08:14.151872",
+    "updated_at": "2025-12-03T18:08:14.151875"
+  },
+  {
+    "id": "5baba092-f677-4cf9-9eec-4cffad51992e",
+    "name": "ART301 - 3D Modeling",
+    "description": "3D modeling and animation",
+    "dependencies": [
+      "146b6373-f353-456f-ac18-41feedee0bc5"
+    ],
+    "created_at": "2025-12-03T18:08:14.161849",
+    "updated_at": "2025-12-03T18:08:14.161853"
+  },
+  {
+    "id": "f31c2d4c-5a8e-4da4-9edc-985c72370715",
+    "name": "MUS101 - Music Theory Basics",
+    "description": "Notes, scales, and basic harmony",
+    "dependencies": [],
+    "created_at": "2025-12-03T18:08:14.169103",
+    "updated_at": "2025-12-03T18:08:14.169125"
+  },
+  {
+    "id": "d486fa15-7cbf-4c84-bd64-1bada5e2897a",
+    "name": "MUS201 - Advanced Harmony",
+    "description": "Chord progressions and voice leading",
+    "dependencies": [
+      "f31c2d4c-5a8e-4da4-9edc-985c72370715"
+    ],
+    "created_at": "2025-12-03T18:08:14.179260",
+    "updated_at": "2025-12-03T18:08:14.179263"
+  },
+  {
+    "id": "09f40129-f476-41cb-8a77-1d16db943f68",
+    "name": "PE101 - Fitness Fundamentals",
+    "description": "Basic fitness and exercise principles",
+    "dependencies": [],
+    "created_at": "2025-12-03T18:08:14.185903",
+    "updated_at": "2025-12-03T18:08:14.185906"
+  },
+  {
+    "id": "d744a898-cd2d-4ec8-a16f-2d0148e520e4",
+    "name": "PE201 - Sports Science",
+    "description": "Biomechanics and sports physiology",
+    "dependencies": [
+      "09f40129-f476-41cb-8a77-1d16db943f68"
+    ],
+    "created_at": "2025-12-03T18:08:14.194056",
+    "updated_at": "2025-12-03T18:08:14.194059"
+  }
+]

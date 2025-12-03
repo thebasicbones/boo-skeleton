@@ -10,15 +10,15 @@
 
 :root {
     /* Color Palette */
-    --primary-color: #3b82f6;
-    --primary-hover: #2563eb;
-    --primary-active: #1d4ed8;
+    --primary-color: #734baa;
+    --primary-hover: #4b458c;
+    --primary-active: #451c83;
     --secondary-color: #6b7280;
     --secondary-hover: #4b5563;
-    --danger-color: #ef4444;
-    --danger-hover: #dc2626;
-    --success-color: #10b981;
-    --warning-color: #f59e0b;
+    --danger-color: #868922;
+    --danger-hover: #a34424;
+    --success-color: #4a0e0e;
+    --warning-color: #b4760b;
     
     /* Neutral Colors */
     --bg-primary: #ffffff;
@@ -477,13 +477,25 @@ body {
 }
 
 .dependency-badge::before {
-    content: "•";
+    content: "←";
     margin-right: var(--spacing-xs);
     color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1rem;
 }
 
 .dependency-badge:hover::before {
     color: white;
+    animation: arrow-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes arrow-pulse {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(-3px);
+    }
 }
 
 .no-dependencies {
@@ -931,4 +943,902 @@ button:focus-visible,
         box-shadow: none;
         border: 1px solid #000;
     }
+}
+
+
+/* ===================================
+   Enhanced DAG Visualization
+   =================================== */
+
+/* Add arrow indicators to dependency badges */
+.dependency-badge::before {
+    content: "←";
+    margin-right: var(--spacing-xs);
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.dependency-badge:hover::before {
+    color: white;
+    animation: arrow-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes arrow-pulse {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(-3px);
+    }
+}
+
+/* Enhanced dependency section with better visual hierarchy */
+.resource-dependencies {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 2px solid var(--bg-tertiary);
+    background: linear-gradient(to bottom, transparent, var(--bg-secondary));
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.dependencies-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+}
+
+.dependencies-label::before {
+    content: "🔗";
+    margin-right: var(--spacing-xs);
+    font-size: 1rem;
+}
+
+/* Enhanced dependency badges with better visual hierarchy */
+.dependency-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: all var(--transition-base);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.dependency-badge:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    border-color: var(--primary-hover);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+/* Add visual depth indicators with colored left borders */
+.resource-card[data-depth="0"] {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.05), transparent);
+}
+
+.resource-card[data-depth="0"]::before {
+    content: "ROOT";
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    background-color: #10b981;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.05em;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.resource-card[data-depth="1"] {
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);
+}
+
+.resource-card[data-depth="2"] {
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(to right, rgba(245, 158, 11, 0.05), transparent);
+}
+
+.resource-card[data-depth="3"] {
+    border-left: 4px solid #ef4444;
+    background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent);
+}
+
+/* Enhanced topological order badge */
+.topological-order-badge {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    transition: all var(--transition-fast);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.topological-order-badge:hover {
+    transform: scale(1.15) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+}
+
+/* Add depth level indicator to cards */
+.resource-card-header {
+    position: relative;
+    padding-top: var(--spacing-md);
+}
+
+/* Ensure root cards have space for the ROOT badge */
+.resource-card[data-depth="0"] .resource-card-header {
+    padding-top: var(--spacing-xl);
+}
+
+/* Visual connection lines between dependencies (subtle) */
+.dependency-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background-color: rgba(59, 130, 246, 0.03);
+    border-radius: var(--radius-md);
+    border: 1px dashed rgba(59, 130, 246, 0.2);
+}
+
+/* No dependencies state with better visual */
+.no-dependencies {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--spacing-sm);
+    background-color: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    border: 1px dashed var(--border-color);
+}
+
+.no-dependencies::before {
+    content: "✓";
+    margin-right: var(--spacing-xs);
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+/* Highlight animation for clicked dependencies */
+@keyframes highlight {
+    0%, 100% {
+        box-shadow: var(--shadow-md);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), var(--shadow-xl);
+        transform: scale(1.02);
+    }
+}
+
+/* Add hover effect to entire card */
+.resource-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-color);
+}
+
+/* Improve resource card title visibility */
+.resource-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.4;
+    padding-right: 50px; /* Make room for topological badge */
+}
+
+/* Add visual separator between card sections */
+.resource-card-description {
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--bg-tertiary);
+    margin-bottom: var(--spacing-md);
+    min-height: 3em;
+}
+
+/* Improve meta information display */
+.resource-card-meta {
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.resource-card-id {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    background-color: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Add depth level legend (optional - can be added to HTML) */
+.depth-legend {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+}
+
+.depth-legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+.depth-legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    border: 2px solid currentColor;
+}
+
+.depth-legend-item:nth-child(1) .depth-legend-color {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+
+.depth-legend-item:nth-child(2) .depth-legend-color {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.depth-legend-item:nth-child(3) .depth-legend-color {
+    background-color: #f59e0b;
+    border-color: #f59e0b;
+}
+
+.depth-legend-item:nth-child(4) .depth-legend-color {
+    background-color: #ef4444;
+    border-color: #ef4444;
+}
+
+
+/* ===================================
+   DAG Sort Controls
+   =================================== */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.section-header h2 {
+    margin: 0;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background-color: var(--bg-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.sort-controls label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.sort-select {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-family: inherit;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 200px;
+}
+
+.sort-select:hover {
+    border-color: var(--primary-color);
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* DAG Group Separator */
+.dag-group {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.dag-group-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dag-group-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.dag-group-info {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.dag-group-resources {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+
+/* ===================================
+   Tree/Graph Visualization
+   =================================== */
+
+.dag-visualization {
+    background: linear-gradient(to bottom, #f8fafc, #ffffff);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    overflow-x: auto;
+}
+
+.tree-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: fit-content;
+}
+
+.tree-level {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    position: relative;
+}
+
+.tree-node {
+    background: white;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    min-width: 200px;
+    max-width: 250px;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+    cursor: pointer;
+    position: relative;
+}
+
+.tree-node:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-hover);
+    z-index: 10;
+}
+
+.tree-node.root {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ffffff, #f0fdf4);
+}
+
+.tree-node.level-1 {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #ffffff, #eff6ff);
+}
+
+.tree-node.level-2 {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #ffffff, #fffbeb);
+}
+
+.tree-node.level-3 {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #ffffff, #fef2f2);
+}
+
+.tree-node-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.3;
+}
+
+.tree-node-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: var(--spacing-sm);
+}
+
+.tree-node-badge {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-top: var(--spacing-xs);
+}
+
+.tree-node.root .tree-node-badge {
+    background-color: #10b981;
+}
+
+/* Connection lines between nodes */
+.tree-connections {
+    position: relative;
+    height: 40px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.tree-connection-line {
+    position: absolute;
+    background-color: var(--primary-color);
+    opacity: 0.3;
+}
+
+.tree-connection-line.vertical {
+    width: 2px;
+    height: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.tree-connection-line.horizontal {
+    height: 2px;
+    top: 20px;
+}
+
+/* View toggle buttons */
+.view-toggle {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    background-color: var(--bg-primary);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.view-toggle-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: white;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.view-toggle-btn:hover {
+    border-color: var(--primary-color);
+    background-color: var(--bg-secondary);
+}
+
+.view-toggle-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.view-toggle-btn::before {
+    font-size: 1rem;
+}
+
+.view-toggle-btn.tree-view::before {
+    content: "🌳";
+}
+
+.view-toggle-btn.grid-view::before {
+    content: "📊";
+}
+
+/* Hide/show based on view mode */
+.dag-visualization.hidden {
+    display: none;
+}
+
+.dag-group-resources.hidden {
+    display: none;
+}
+
+/* Responsive tree layout */
+@media (max-width: 768px) {
+    .tree-level {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+    
+    .tree-node {
+        max-width: 100%;
+    }
+}
+
+
+/* ===================================
+   Vintage Botanical Forest Theme
+   =================================== */
+
+.dag-visualization {
+    /* Parchment/old paper background */
+    background: 
+        linear-gradient(90deg, transparent 0%, rgba(139, 69, 19, 0.03) 50%, transparent 100%),
+        linear-gradient(0deg, transparent 0%, rgba(139, 69, 19, 0.03) 50%, transparent 100%),
+        #f4f1e8;
+    background-size: 50px 50px, 50px 50px, 100% 100%;
+    border: 4px double #8b6f47;
+    border-radius: 2px;
+    padding: var(--spacing-2xl);
+    margin-bottom: var(--spacing-xl);
+    overflow-x: auto;
+    box-shadow: 
+        inset 0 0 20px rgba(139, 111, 71, 0.1),
+        0 8px 24px rgba(101, 67, 33, 0.15);
+    position: relative;
+}
+
+/* Vintage paper texture */
+.dag-visualization::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 111, 71, 0.03) 2px, rgba(139, 111, 71, 0.03) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139, 111, 71, 0.03) 2px, rgba(139, 111, 71, 0.03) 4px);
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+.tree-container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Vine-like connectors between levels */
+.level-connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    position: relative;
+    margin: var(--spacing-md) 0;
+}
+
+.connector-arrow {
+    font-size: 2.5rem;
+    color: #6d7c3f;
+    position: relative;
+    animation: grow 3s ease-in-out infinite;
+    filter: drop-shadow(0 2px 3px rgba(101, 67, 33, 0.2));
+}
+
+.connector-arrow::before {
+    content: '│';
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    color: #8b7355;
+    opacity: 0.6;
+}
+
+.connector-arrow::after {
+    content: '╱╲';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    color: #6d7c3f;
+    opacity: 0.4;
+    letter-spacing: -4px;
+}
+
+@keyframes grow {
+    0%, 100% {
+        transform: scaleY(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scaleY(1.1);
+        opacity: 1;
+    }
+}
+
+/* Vintage botanical illustration style nodes */
+.tree-node {
+    background: #fdfbf7;
+    border: 2px solid #654321;
+    border-radius: 8px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-width: 220px;
+    max-width: 280px;
+    box-shadow: 
+        0 2px 8px rgba(101, 67, 33, 0.15),
+        inset 0 0 0 1px rgba(139, 111, 71, 0.1);
+    transition: all var(--transition-base);
+    cursor: pointer;
+    position: relative;
+    font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+/* Decorative corner flourishes */
+.tree-node::before,
+.tree-node::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #8b6f47;
+    opacity: 0.4;
+}
+
+.tree-node::before {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.tree-node::after {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+}
+
+.tree-node:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 6px 16px rgba(101, 67, 33, 0.25),
+        inset 0 0 0 1px rgba(139, 111, 71, 0.2);
+    border-color: #8b6f47;
+    background: #fffef9;
+    z-index: 10;
+}
+
+/* Root nodes - seed/acorn style */
+.tree-node.root {
+    border-color: #5d4037;
+    border-width: 3px;
+    background: #f5f0e8;
+}
+
+/* Level 1 - sprout */
+.tree-node.level-1 {
+    border-color: #6d7c3f;
+    background: #f8faf5;
+}
+
+/* Level 2 - branch */
+.tree-node.level-2 {
+    border-color: #8b7355;
+    background: #faf8f3;
+}
+
+/* Level 3+ - flower/fruit */
+.tree-node.level-3 {
+    border-color: #9c6644;
+    background: #fdf9f3;
+}
+
+/* Vintage botanical text styling */
+.tree-node-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #2c1810;
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.4;
+    font-style: normal;
+    border-bottom: 2px solid rgba(101, 67, 33, 0.3);
+    padding-bottom: var(--spacing-xs);
+}
+
+.tree-node-desc {
+    font-size: 0.8rem;
+    color: #3e2723;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-sm);
+    font-family: 'Georgia', serif;
+    display: block;
+}
+
+.tree-node-deps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.tree-dep-badge {
+    font-size: 0.65rem;
+    color: #6d7c3f;
+    background: rgba(109, 124, 63, 0.1);
+    border: 1px solid rgba(109, 124, 63, 0.3);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+.tree-node-badge {
+    display: inline-block;
+    color: #fdfbf7;
+    background: #654321;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-top: var(--spacing-xs);
+    box-shadow: 0 1px 3px rgba(101, 67, 33, 0.3);
+    font-family: 'Georgia', serif;
+    letter-spacing: 0.5px;
+}
+
+/* Vintage view toggle buttons */
+.view-toggle {
+    background: #f4f1e8;
+    border: 2px solid #8b6f47;
+    box-shadow: 0 2px 6px rgba(101, 67, 33, 0.15);
+}
+
+.view-toggle-btn {
+    background: #fdfbf7;
+    border: 2px solid #8b7355;
+    color: #3e2723;
+    font-weight: 600;
+    font-family: 'Georgia', serif;
+}
+
+.view-toggle-btn:hover {
+    background: #f5f0e8;
+    border-color: #654321;
+}
+
+.view-toggle-btn.active {
+    background: #654321;
+    color: #fdfbf7;
+    border-color: #5d4037;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Botanical illustration decorative elements */
+.tree-level {
+    position: relative;
+}
+
+.tree-level::before {
+    content: '❦';
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #8b7355;
+    opacity: 0.3;
+}
+
+.tree-level:nth-child(even)::before {
+    content: '✿';
+    right: -40px;
+    left: auto;
+}
+
+/* Vintage botanical header when tree view is active */
+.dag-group:has(.dag-visualization:not(.hidden)) .dag-group-header {
+    background: linear-gradient(135deg, #654321 0%, #8b6f47 100%);
+    box-shadow: 0 4px 12px rgba(101, 67, 33, 0.3);
+    border: 2px solid #5d4037;
+}
+
+/* Vintage depth legend */
+.dag-group:has(.dag-visualization:not(.hidden)) .depth-legend {
+    background: #f4f1e8;
+    border: 2px solid #8b6f47;
+}
+
+.dag-group:has(.dag-visualization:not(.hidden)) .depth-legend-item:nth-child(1) .depth-legend-color {
+    background: #5d4037;
+    border-color: #5d4037;
+}
+
+.dag-group:has(.dag-visualization:not(.hidden)) .depth-legend-item:nth-child(2) .depth-legend-color {
+    background: #6d7c3f;
+    border-color: #6d7c3f;
+}
+
+.dag-group:has(.dag-visualization:not(.hidden)) .depth-legend-item:nth-child(3) .depth-legend-color {
+    background: #8b7355;
+    border-color: #8b7355;
+}
+
+.dag-group:has(.dag-visualization:not(.hidden)) .depth-legend-item:nth-child(4) .depth-legend-color {
+    background: #9c6644;
+    border-color: #9c6644;
+}
+
+/* Vintage botanical border decoration */
+.dag-visualization::after {
+    content: '⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙ ⸙';
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #8b6f47;
+    opacity: 0.3;
+    letter-spacing: 1rem;
+    pointer-events: none;
 }
