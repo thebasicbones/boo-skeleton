@@ -26,8 +26,8 @@
   - **Property 4: Backend abstraction transparency (SQLAlchemy baseline)**
   - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6**
 
-- [ ] 4. Implement MongoDB connection management
-- [ ] 4.1 Create MongoDB database connection module
+- [x] 4. Implement MongoDB connection management
+- [x] 4.1 Create MongoDB database connection module
   - Create `app/database_mongodb.py` with Motor client initialization
   - Implement `get_mongodb_client()` function to return AsyncIOMotorClient
   - Implement `get_mongodb_db()` function to return database instance
@@ -36,7 +36,7 @@
   - Handle connection errors with descriptive error messages
   - _Requirements: 1.2, 1.4, 1.5_
 
-- [ ]* 4.2 Write property test for MongoDB connection lifecycle
+- [x] 4.2 Write property test for MongoDB connection lifecycle
   - **Property 1: Backend initialization from configuration (MongoDB)**
   - **Validates: Requirements 1.2**
 

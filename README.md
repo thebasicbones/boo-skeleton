@@ -116,3 +116,30 @@ Run property-based tests only:
 ```bash
 pytest tests/test_property_*.py -v
 ```
+
+### MongoDB Testing
+
+Some property-based tests require MongoDB to be running. If MongoDB is not available, these tests will be automatically skipped.
+
+To run MongoDB tests, ensure MongoDB is running locally:
+
+```bash
+# Using Docker
+docker run -d -p 27017:27017 --name mongodb mongo:7.0
+
+# Or install MongoDB locally and start the service
+# macOS: brew services start mongodb-community
+# Linux: sudo systemctl start mongod
+```
+
+Set the test database environment variable:
+
+```bash
+export MONGODB_DATABASE=fastapi_crud_test
+```
+
+Then run the tests:
+
+```bash
+pytest tests/test_property_mongodb_*.py -v
+```

@@ -26,3 +26,35 @@ class CircularDependencyError(Exception):
         self.cycle_path = cycle_path
         cycle_str = " → ".join(cycle_path)
         super().__init__(f"Circular dependency detected: {cycle_str}")
+
+
+class DatabaseError(Exception):
+    """Base exception for database errors"""
+    pass
+
+
+class DatabaseConnectionError(DatabaseError):
+    """Database connection failed"""
+    
+    def __init__(self, message: str, details: Optional[str] = None):
+        self.message = message
+        self.details = details
+        super().__init__(message)
+
+
+class DatabaseTimeoutError(DatabaseError):
+    """Database operation timed out"""
+    
+    def __init__(self, message: str, operation: Optional[str] = None):
+        self.message = message
+        self.operation = operation
+        super().__init__(message)
+
+
+class DuplicateResourceError(DatabaseError):
+    """Resource with same identifier already exists"""
+    
+    def __init__(self, resource_id: str, details: Optional[str] = None):
+        self.resource_id = resource_id
+        self.details = details
+        super().__init__(f"Resource with id {resource_id} already exists")
