@@ -1,47 +1,58 @@
-"""Tests for ResourceRepository"""
+"""Tests for ResourceRepository
+
+These tests use the db_backend fixture to run against both SQLite and MongoDB,
+ensuring backend abstraction transparency.
+"""
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import StaticPool
-from app.models.sqlalchemy_resource import Base, Resource
-from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
+from typing import Union, Dict, Any, List
 from app.schemas import ResourceCreate, ResourceUpdate
 
 
-@pytest.fixture
-async def db_session():
-    """Create a test database session"""
-    # Create in-memory SQLite database for testing
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+def get_field(obj: Union[Dict, Any], field: str) -> Any:
+    """
+    Get a field value from either a dictionary or an object.
     
-    # Create tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    This helper function allows tests to work with both MongoDB (dict) and
+    SQLAlchemy (object) return values in a backend-agnostic way.
     
-    # Create session
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    
-    async with async_session() as session:
-        yield session
-    
-    # Cleanup
-    await engine.dispose()
+    Args:
+        obj: Dictionary or object to get field from
+        field: Field name to retrieve
+        
+    Returns:
+        Field value
+    """
+    if isinstance(obj, dict):
+        return obj.get(field)
+    else:
+        return getattr(obj, field)
 
 
-@pytest.fixture
-def repository(db_session):
-    """Create a SQLAlchemyResourceRepository instance"""
-    return SQLAlchemyResourceRepository(db_session)
+def get_dependencies(obj: Union[Dict, Any]) -> List[str]:
+    """
+    Get dependency IDs from either a dictionary or an object.
+    
+    For MongoDB: dependencies are stored as a list of strings
+    For SQLAlchemy: dependencies are Resource objects with .id attributes
+    
+    Args:
+        obj: Dictionary or object to get dependencies from
+        
+    Returns:
+        List of dependency IDs
+    """
+    if isinstance(obj, dict):
+        return obj.get('dependencies', [])
+    else:
+        deps = getattr(obj, 'dependencies', [])
+        return [d.id for d in deps]
 
 
 @pytest.mark.asyncio
-async def test_create_resource(repository):
+async def test_create_resource(db_backend):
     """Test creating a resource"""
+    backend_name, repository = db_backend
+    
     data = ResourceCreate(
         name="Test Resource",
         description="A test resource",
@@ -50,37 +61,44 @@ async def test_create_resource(repository):
     
     resource = await repository.create(data)
     
-    assert resource.id is not None
-    assert resource.name == "Test Resource"
-    assert resource.description == "A test resource"
-    assert resource.dependencies == []
+    assert get_field(resource, 'id') is not None
+    assert get_field(resource, 'name') == "Test Resource"
+    assert get_field(resource, 'description') == "A test resource"
+    assert get_dependencies(resource) == []
 
 
 @pytest.mark.asyncio
-async def test_get_by_id(repository):
+async def test_get_by_id(db_backend):
     """Test retrieving a resource by ID"""
+    backend_name, repository = db_backend
+    
     # Create a resource
     data = ResourceCreate(name="Test Resource", description="Test", dependencies=[])
     created = await repository.create(data)
+    created_id = get_field(created, 'id')
     
     # Retrieve it
-    retrieved = await repository.get_by_id(created.id)
+    retrieved = await repository.get_by_id(created_id)
     
     assert retrieved is not None
-    assert retrieved.id == created.id
-    assert retrieved.name == created.name
+    assert get_field(retrieved, 'id') == created_id
+    assert get_field(retrieved, 'name') == get_field(created, 'name')
 
 
 @pytest.mark.asyncio
-async def test_get_by_id_not_found(repository):
+async def test_get_by_id_not_found(db_backend):
     """Test retrieving a non-existent resource"""
+    backend_name, repository = db_backend
+    
     result = await repository.get_by_id("non-existent-id")
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_get_all(repository):
+async def test_get_all(db_backend):
     """Test retrieving all resources"""
+    backend_name, repository = db_backend
+    
     # Create multiple resources
     data1 = ResourceCreate(name="Resource 1", dependencies=[])
     data2 = ResourceCreate(name="Resource 2", dependencies=[])
@@ -92,98 +110,121 @@ async def test_get_all(repository):
     resources = await repository.get_all()
     
     assert len(resources) == 2
-    assert any(r.name == "Resource 1" for r in resources)
-    assert any(r.name == "Resource 2" for r in resources)
+    assert any(get_field(r, 'name') == "Resource 1" for r in resources)
+    assert any(get_field(r, 'name') == "Resource 2" for r in resources)
 
 
 @pytest.mark.asyncio
-async def test_update_resource(repository):
+async def test_update_resource(db_backend):
     """Test updating a resource"""
+    backend_name, repository = db_backend
+    
     # Create a resource
     data = ResourceCreate(name="Original Name", description="Original", dependencies=[])
     created = await repository.create(data)
+    created_id = get_field(created, 'id')
     
     # Update it
     update_data = ResourceUpdate(name="Updated Name", description="Updated description")
-    updated = await repository.update(created.id, update_data)
+    updated = await repository.update(created_id, update_data)
     
     assert updated is not None
-    assert updated.id == created.id
-    assert updated.name == "Updated Name"
-    assert updated.description == "Updated description"
+    assert get_field(updated, 'id') == created_id
+    assert get_field(updated, 'name') == "Updated Name"
+    assert get_field(updated, 'description') == "Updated description"
 
 
 @pytest.mark.asyncio
-async def test_update_non_existent(repository):
+async def test_update_non_existent(db_backend):
     """Test updating a non-existent resource"""
+    backend_name, repository = db_backend
+    
     update_data = ResourceUpdate(name="Updated Name")
     result = await repository.update("non-existent-id", update_data)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_resource(repository):
+async def test_delete_resource(db_backend):
     """Test deleting a resource"""
+    backend_name, repository = db_backend
+    
     # Create a resource
     data = ResourceCreate(name="To Delete", dependencies=[])
     created = await repository.create(data)
+    created_id = get_field(created, 'id')
     
     # Delete it
-    result = await repository.delete(created.id)
+    result = await repository.delete(created_id)
     assert result is True
     
     # Verify it's gone
-    retrieved = await repository.get_by_id(created.id)
+    retrieved = await repository.get_by_id(created_id)
     assert retrieved is None
 
 
 @pytest.mark.asyncio
-async def test_delete_non_existent(repository):
+async def test_delete_non_existent(db_backend):
     """Test deleting a non-existent resource"""
+    backend_name, repository = db_backend
+    
     result = await repository.delete("non-existent-id")
     assert result is False
 
 
 @pytest.mark.asyncio
-async def test_create_with_dependencies(repository):
+async def test_create_with_dependencies(db_backend):
     """Test creating a resource with dependencies"""
+    backend_name, repository = db_backend
+    
     # Create dependency resources
     dep1 = await repository.create(ResourceCreate(name="Dependency 1", dependencies=[]))
     dep2 = await repository.create(ResourceCreate(name="Dependency 2", dependencies=[]))
+    dep1_id = get_field(dep1, 'id')
+    dep2_id = get_field(dep2, 'id')
     
     # Create resource with dependencies
     data = ResourceCreate(
         name="Main Resource",
         description="Has dependencies",
-        dependencies=[dep1.id, dep2.id]
+        dependencies=[dep1_id, dep2_id]
     )
     resource = await repository.create(data)
     
-    assert len(resource.dependencies) == 2
-    dep_ids = [d.id for d in resource.dependencies]
-    assert dep1.id in dep_ids
-    assert dep2.id in dep_ids
+    dep_ids = get_dependencies(resource)
+    assert len(dep_ids) == 2
+    assert dep1_id in dep_ids
+    assert dep2_id in dep_ids
 
 
 @pytest.mark.asyncio
-async def test_update_dependencies(repository):
+async def test_update_dependencies(db_backend):
     """Test updating resource dependencies"""
+    backend_name, repository = db_backend
+    
     # Create resources
     dep1 = await repository.create(ResourceCreate(name="Dep 1", dependencies=[]))
     dep2 = await repository.create(ResourceCreate(name="Dep 2", dependencies=[]))
-    resource = await repository.create(ResourceCreate(name="Main", dependencies=[dep1.id]))
+    dep1_id = get_field(dep1, 'id')
+    dep2_id = get_field(dep2, 'id')
+    
+    resource = await repository.create(ResourceCreate(name="Main", dependencies=[dep1_id]))
+    resource_id = get_field(resource, 'id')
     
     # Update dependencies
-    update_data = ResourceUpdate(dependencies=[dep2.id])
-    updated = await repository.update(resource.id, update_data)
+    update_data = ResourceUpdate(dependencies=[dep2_id])
+    updated = await repository.update(resource_id, update_data)
     
-    assert len(updated.dependencies) == 1
-    assert updated.dependencies[0].id == dep2.id
+    updated_deps = get_dependencies(updated)
+    assert len(updated_deps) == 1
+    assert dep2_id in updated_deps
 
 
 @pytest.mark.asyncio
-async def test_search_by_name(repository):
+async def test_search_by_name(db_backend):
     """Test searching resources by name"""
+    backend_name, repository = db_backend
+    
     await repository.create(ResourceCreate(name="Frontend Service", dependencies=[]))
     await repository.create(ResourceCreate(name="Backend Service", dependencies=[]))
     await repository.create(ResourceCreate(name="Database", dependencies=[]))
@@ -191,12 +232,14 @@ async def test_search_by_name(repository):
     results = await repository.search("Service")
     
     assert len(results) == 2
-    assert all("Service" in r.name for r in results)
+    assert all("Service" in get_field(r, 'name') for r in results)
 
 
 @pytest.mark.asyncio
-async def test_search_by_description(repository):
+async def test_search_by_description(db_backend):
     """Test searching resources by description"""
+    backend_name, repository = db_backend
+    
     await repository.create(ResourceCreate(
         name="Service A",
         description="Python backend",
@@ -211,12 +254,14 @@ async def test_search_by_description(repository):
     results = await repository.search("Python")
     
     assert len(results) == 1
-    assert results[0].name == "Service A"
+    assert get_field(results[0], 'name') == "Service A"
 
 
 @pytest.mark.asyncio
-async def test_search_empty_query(repository):
+async def test_search_empty_query(db_backend):
     """Test search with empty query returns all resources"""
+    backend_name, repository = db_backend
+    
     await repository.create(ResourceCreate(name="Resource 1", dependencies=[]))
     await repository.create(ResourceCreate(name="Resource 2", dependencies=[]))
     
@@ -226,49 +271,62 @@ async def test_search_empty_query(repository):
 
 
 @pytest.mark.asyncio
-async def test_delete_cascade(repository):
+async def test_delete_cascade(db_backend):
     """Test cascade delete removes dependents"""
+    backend_name, repository = db_backend
+    
     # Create dependency chain: A -> B -> C
     resource_a = await repository.create(ResourceCreate(name="A", dependencies=[]))
+    resource_a_id = get_field(resource_a, 'id')
+    
     resource_b = await repository.create(ResourceCreate(
         name="B",
-        dependencies=[resource_a.id]
+        dependencies=[resource_a_id]
     ))
+    resource_b_id = get_field(resource_b, 'id')
+    
     resource_c = await repository.create(ResourceCreate(
         name="C",
-        dependencies=[resource_b.id]
+        dependencies=[resource_b_id]
     ))
+    resource_c_id = get_field(resource_c, 'id')
     
     # Delete A with cascade
-    await repository.delete(resource_a.id, cascade=True)
+    await repository.delete(resource_a_id, cascade=True)
     
     # Verify A, B, and C are all deleted
-    assert await repository.get_by_id(resource_a.id) is None
-    assert await repository.get_by_id(resource_b.id) is None
-    assert await repository.get_by_id(resource_c.id) is None
+    assert await repository.get_by_id(resource_a_id) is None
+    assert await repository.get_by_id(resource_b_id) is None
+    assert await repository.get_by_id(resource_c_id) is None
 
 
 @pytest.mark.asyncio
-async def test_delete_non_cascade(repository):
+async def test_delete_non_cascade(db_backend):
     """Test non-cascade delete preserves dependents"""
+    backend_name, repository = db_backend
+    
     # Create dependency: B -> A (B depends on A)
     resource_a = await repository.create(ResourceCreate(name="A", dependencies=[]))
+    resource_a_id = get_field(resource_a, 'id')
+    
     resource_b = await repository.create(ResourceCreate(
         name="B",
-        dependencies=[resource_a.id]
+        dependencies=[resource_a_id]
     ))
+    resource_b_id = get_field(resource_b, 'id')
     
     # Verify B depends on A initially
-    assert len(resource_b.dependencies) == 1
-    assert resource_b.dependencies[0].id == resource_a.id
+    b_deps = get_dependencies(resource_b)
+    assert len(b_deps) == 1
+    assert resource_a_id in b_deps
     
     # Delete A without cascade
-    await repository.delete(resource_a.id, cascade=False)
+    await repository.delete(resource_a_id, cascade=False)
     
     # Verify A is deleted
-    assert await repository.get_by_id(resource_a.id) is None
+    assert await repository.get_by_id(resource_a_id) is None
     
     # B should still exist (non-cascade means we don't delete the dependent resource B)
-    b_after = await repository.get_by_id(resource_b.id)
+    b_after = await repository.get_by_id(resource_b_id)
     assert b_after is not None
-    assert b_after.name == "B"
+    assert get_field(b_after, 'name') == "B"

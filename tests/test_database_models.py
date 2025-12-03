@@ -1,49 +1,31 @@
-"""Tests for database models and schema"""
+"""Tests for database models and schema
+
+Note: These tests are SQLAlchemy-specific and test the ORM model directly.
+For backend-agnostic tests, see test_resource_repository.py which uses the
+db_backend fixture to test both SQLite and MongoDB.
+"""
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import StaticPool
-from app.models.sqlalchemy_resource import Base, Resource
 from datetime import datetime
+from app.schemas import ResourceCreate
 
 
 @pytest.fixture
-async def db_session():
-    """Create a test database session"""
-    # Use in-memory SQLite for testing
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        echo=False
-    )
-    
-    # Create tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    # Create session
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    
-    async with async_session() as session:
-        yield session
-    
-    # Cleanup
-    await engine.dispose()
+async def repository(clean_sqlalchemy_db):
+    """Create a repository for testing SQLAlchemy models"""
+    from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
+    return SQLAlchemyResourceRepository(clean_sqlalchemy_db)
 
 
 @pytest.mark.asyncio
-async def test_create_resource(db_session):
+async def test_create_resource(repository):
     """Test creating a basic resource"""
-    resource = Resource(
+    data = ResourceCreate(
         name="Test Resource",
-        description="A test resource"
+        description="A test resource",
+        dependencies=[]
     )
     
-    db_session.add(resource)
-    await db_session.commit()
-    await db_session.refresh(resource)
+    resource = await repository.create(data)
     
     assert resource.id is not None
     assert resource.name == "Test Resource"
@@ -53,70 +35,63 @@ async def test_create_resource(db_session):
 
 
 @pytest.mark.asyncio
-async def test_resource_with_dependencies(db_session):
+async def test_resource_with_dependencies(repository):
     """Test creating resources with dependencies"""
     # Create base resources
-    resource_a = Resource(name="Resource A", description="Base resource A")
-    resource_b = Resource(name="Resource B", description="Base resource B")
-    
-    db_session.add(resource_a)
-    db_session.add(resource_b)
-    await db_session.commit()
-    await db_session.refresh(resource_a)
-    await db_session.refresh(resource_b)
+    resource_a = await repository.create(ResourceCreate(
+        name="Resource A",
+        description="Base resource A",
+        dependencies=[]
+    ))
+    resource_b = await repository.create(ResourceCreate(
+        name="Resource B",
+        description="Base resource B",
+        dependencies=[]
+    ))
     
     # Create resource that depends on A and B
-    resource_c = Resource(
+    resource_c = await repository.create(ResourceCreate(
         name="Resource C",
-        description="Depends on A and B"
-    )
-    resource_c.dependencies.append(resource_a)
-    resource_c.dependencies.append(resource_b)
-    
-    db_session.add(resource_c)
-    await db_session.commit()
-    await db_session.refresh(resource_c)
+        description="Depends on A and B",
+        dependencies=[resource_a.id, resource_b.id]
+    ))
     
     # Verify dependencies
     assert len(resource_c.dependencies) == 2
-    dependency_names = {dep.name for dep in resource_c.dependencies}
-    assert "Resource A" in dependency_names
-    assert "Resource B" in dependency_names
+    dependency_ids = {dep.id for dep in resource_c.dependencies}
+    assert resource_a.id in dependency_ids
+    assert resource_b.id in dependency_ids
 
 
 @pytest.mark.asyncio
-async def test_cascade_delete(db_session):
-    """Test that cascade delete works for dependency relationships"""
-    # Create resources with dependencies
-    resource_a = Resource(name="Resource A")
-    resource_b = Resource(name="Resource B")
-    resource_b.dependencies.append(resource_a)
+async def test_cascade_delete(repository):
+    """Test that cascade delete works for dependency relationships
     
-    db_session.add(resource_a)
-    db_session.add(resource_b)
-    await db_session.commit()
+    Note: This test is SQLAlchemy-specific and tests the ORM behavior.
+    When a resource is deleted, the foreign key CASCADE removes the junction
+    table entries, but the dependency relationship is maintained at the database level.
+    """
+    # Create resources with dependencies
+    resource_a = await repository.create(ResourceCreate(
+        name="Resource A",
+        dependencies=[]
+    ))
+    resource_b = await repository.create(ResourceCreate(
+        name="Resource B",
+        dependencies=[resource_a.id]
+    ))
     
     resource_a_id = resource_a.id
     resource_b_id = resource_b.id
     
-    # Delete resource A
-    await db_session.delete(resource_a)
-    await db_session.commit()
+    # Delete resource A without cascade (removes only A)
+    await repository.delete(resource_a_id, cascade=False)
     
     # Verify resource A is deleted
-    from sqlalchemy import select
-    result_a = await db_session.execute(
-        select(Resource).where(Resource.id == resource_a_id)
-    )
-    resource_a_after = result_a.scalar_one_or_none()
+    resource_a_after = await repository.get_by_id(resource_a_id)
     assert resource_a_after is None
     
     # Verify resource B still exists
-    result_b = await db_session.execute(
-        select(Resource).where(Resource.id == resource_b_id)
-    )
-    resource_b_after = result_b.scalar_one_or_none()
+    resource_b_after = await repository.get_by_id(resource_b_id)
     assert resource_b_after is not None
-    
-    # The dependency relationship should be automatically removed by CASCADE
-    # This is handled at the database level by the foreign key constraint
+    assert resource_b_after.name == "Resource B"

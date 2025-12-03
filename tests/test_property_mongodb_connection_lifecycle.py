@@ -75,7 +75,8 @@ def valid_mongodb_config_strategy(draw):
 @pytest.mark.asyncio
 @settings(
     max_examples=100,
-    suppress_health_check=[HealthCheck.function_scoped_fixture]
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    deadline=1000  # Allow more time for MongoDB initialization
 )
 @given(config=valid_mongodb_config_strategy())
 async def test_mongodb_initialization_from_configuration(config, monkeypatch):

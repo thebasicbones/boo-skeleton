@@ -1,8 +1,9 @@
-"""Tests for ResourceService business logic"""
+"""Tests for ResourceService business logic
+
+These tests use parameterized fixtures to run against both SQLite and MongoDB,
+ensuring the service layer works correctly with both backends.
+"""
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from app.models.sqlalchemy_resource import Base, Resource
 from app.services.resource_service import (
     ResourceService,
     ResourceNotFoundError,
@@ -11,32 +12,19 @@ from app.services.resource_service import (
 from app.schemas import ResourceCreate, ResourceUpdate
 
 
-# Test database setup
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-
-@pytest.fixture
-async def db_session():
-    """Create a test database session"""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+@pytest.fixture(params=["sqlite", "mongodb"])
+async def service(request, clean_sqlalchemy_db, clean_mongodb_db, mongodb_available):
+    """Create a ResourceService instance with the appropriate backend"""
+    backend = request.param
     
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    
-    async with async_session() as session:
-        yield session
-    
-    await engine.dispose()
-
-
-@pytest.fixture
-async def service(db_session):
-    """Create a ResourceService instance"""
-    return ResourceService(db_session)
+    if backend == 'sqlite':
+        return ResourceService(clean_sqlalchemy_db)
+    elif backend == 'mongodb':
+        if not mongodb_available:
+            pytest.skip("MongoDB is not available for testing")
+        return ResourceService(clean_mongodb_db)
+    else:
+        raise ValueError(f"Unknown backend: {backend}")
 
 
 class TestCreateResource:

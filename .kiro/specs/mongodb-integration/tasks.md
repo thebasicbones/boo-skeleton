@@ -119,12 +119,12 @@
   - Ensure startup and shutdown events handle both backends
   - _Requirements: 1.2, 1.3, 1.5_
 
-- [ ] 9. Implement MongoDB-specific error handling
-- [ ] 9.1 Extend exception hierarchy
+- [x] 9. Implement MongoDB-specific error handling
+- [x] 9.1 Extend exception hierarchy
   - Add `DatabaseConnectionError`, `DatabaseTimeoutError`, `DuplicateResourceError` to `app/exceptions.py`
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 9.2 Update error handlers
+- [x] 9.2 Update error handlers
   - Update `app/error_handlers.py` to handle new database exception types
   - Map `DatabaseConnectionError` and `DatabaseTimeoutError` to HTTP 503
   - Map validation errors to HTTP 400
@@ -132,36 +132,36 @@
   - Ensure error responses include descriptive messages
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ]* 9.3 Write property test for connection error handling
+- [x] 9.3 Write property test for connection error handling
   - **Property 10: Connection error handling**
   - **Validates: Requirements 6.1**
 
-- [ ]* 9.4 Write property test for validation error handling
+- [x] 9.4 Write property test for validation error handling
   - **Property 11: Validation error handling**
   - **Validates: Requirements 6.2**
 
-- [ ] 10. Create test infrastructure for dual-backend testing
-- [ ] 10.1 Create parameterized test fixtures
+- [x] 10. Create test infrastructure for dual-backend testing
+- [x] 10.1 Create parameterized test fixtures
   - Create `tests/conftest.py` fixtures for both SQLite and MongoDB backends
   - Implement `db_backend` fixture parameterized with "sqlite" and "mongodb"
   - Implement setup and teardown for MongoDB test database
   - Ensure test isolation (clean database state between tests)
   - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 10.2 Create Hypothesis strategies for resource data
+- [x] 10.2 Create Hypothesis strategies for resource data
   - Create `tests/strategies.py` with custom Hypothesis strategies
   - Implement `resource_create_strategy()` for generating valid ResourceCreate data
   - Implement `resource_update_strategy()` for generating valid ResourceUpdate data
   - Implement `resource_id_strategy()` for generating valid UUIDs
   - _Requirements: 4.4_
 
-- [ ] 11. Update existing tests to support both backends
+- [x] 11. Update existing tests to support both backends
   - Update existing unit tests to use parameterized `db_backend` fixture
   - Ensure all existing tests pass with both SQLite and MongoDB
   - Update test assertions to be backend-agnostic
   - _Requirements: 4.1, 4.4_
 
-- [ ] 12. Create migration script
+- [x] 12. Create migration script
   - Create `scripts/migrate_sqlite_to_mongodb.py`
   - Implement SQLite data export to JSON
   - Implement MongoDB data import from JSON
@@ -169,7 +169,7 @@
   - Add command-line interface with progress reporting
   - _Requirements: 5.3_
 
-- [ ] 13. Update documentation
+- [x] 13. Update documentation
   - Update `README.md` with MongoDB setup instructions
   - Document all MongoDB-specific environment variables
   - Provide example connection strings for local and cloud deployments
@@ -177,7 +177,7 @@
   - Add troubleshooting section for common MongoDB issues
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 14. Checkpoint - Ensure all tests pass
+- [x] 14. Checkpoint - Ensure all tests pass
   - Run full test suite with both SQLite and MongoDB backends
   - Verify all property-based tests pass with 100+ iterations
   - Verify all unit tests pass
