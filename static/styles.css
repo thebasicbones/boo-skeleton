@@ -512,6 +512,31 @@ body {
     margin-left: var(--spacing-2xl);
 }
 
+/* Topological order badge */
+.topological-order-badge {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    transition: all var(--transition-fast);
+}
+
+.topological-order-badge:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+}
+
 /* ===================================
    Empty State
    =================================== */

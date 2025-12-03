@@ -398,19 +398,12 @@ function renderResources(resources) {
 
 /**
  * Load and display all resources
+ * Now uses search with empty query to get topologically sorted results
  */
 async function loadResources() {
-    try {
-        showLoading();
-        const resources = await fetchResources();
-        renderResources(resources);
-    } catch (error) {
-        console.error('Error loading resources:', error);
-        showError(error.message || 'Failed to load resources');
-        renderResources([]); // Show empty state
-    } finally {
-        hideLoading();
-    }
+    const searchInput = document.getElementById('searchInput');
+    const query = searchInput ? searchInput.value : '';
+    await performSearch(query);
 }
 
 /**
@@ -997,6 +990,142 @@ async function handleConfirmDelete() {
 }
 
 // ===================================
+// Search Functionality
+// ===================================
+
+// Store the debounce timer
+let searchDebounceTimer = null;
+
+/**
+ * Perform search and display results in topological order
+ * @param {string} query - Search query string
+ */
+async function performSearch(query) {
+    try {
+        showLoading();
+        
+        // Call the search API with the query
+        const results = await searchResources(query);
+        
+        // Display results in topological order
+        renderSearchResults(results, query);
+        
+    } catch (error) {
+        console.error('Error performing search:', error);
+        
+        // Check if it's a circular dependency error
+        if (error.message && error.message.toLowerCase().includes('circular')) {
+            showError('Circular dependency detected: ' + error.message);
+        } else {
+            showError(error.message || 'Failed to search resources');
+        }
+        
+        // Show empty state on error
+        renderResources([]);
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Render search results with topological order indicators
+ * @param {Array} resources - Array of resource objects in topological order
+ * @param {string} query - The search query used
+ */
+function renderSearchResults(resources, query) {
+    const resourceList = document.getElementById('resourceList');
+    const emptyState = document.getElementById('emptyState');
+    const resourceSection = document.querySelector('.resource-section h2');
+    
+    if (!resourceList || !emptyState) {
+        console.error('Required DOM elements not found');
+        return;
+    }
+    
+    // Update section title to indicate search/sort mode
+    if (resourceSection) {
+        if (query && query.trim()) {
+            resourceSection.textContent = `Search Results for "${query}" (Topological Order)`;
+        } else {
+            resourceSection.textContent = 'Resources (Topological Order)';
+        }
+    }
+    
+    // Clear existing content
+    resourceList.innerHTML = '';
+    
+    // Show empty state if no resources
+    if (!resources || resources.length === 0) {
+        resourceList.style.display = 'none';
+        emptyState.style.display = 'block';
+        
+        if (query && query.trim()) {
+            emptyState.innerHTML = '<p>No resources found matching your search.</p>';
+        } else {
+            emptyState.innerHTML = '<p>No resources found. Create your first resource to get started!</p>';
+        }
+        return;
+    }
+    
+    // Hide empty state and show resource list
+    emptyState.style.display = 'none';
+    resourceList.style.display = 'grid';
+    
+    // Create and append resource cards with topological order indicators
+    resources.forEach((resource, index) => {
+        const card = createResourceCard(resource, resources);
+        
+        // Add topological order number badge
+        const orderBadge = document.createElement('div');
+        orderBadge.className = 'topological-order-badge';
+        orderBadge.textContent = `#${index + 1}`;
+        orderBadge.setAttribute('title', `Topological order position: ${index + 1}`);
+        
+        // Insert the badge at the beginning of the card
+        card.insertBefore(orderBadge, card.firstChild);
+        
+        resourceList.appendChild(card);
+    });
+}
+
+/**
+ * Handle search input with debouncing
+ * @param {Event} event - Input event
+ */
+function handleSearchInput(event) {
+    const query = event.target.value;
+    
+    // Clear any existing debounce timer
+    if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer);
+    }
+    
+    // Set a new debounce timer (300ms delay)
+    searchDebounceTimer = setTimeout(() => {
+        performSearch(query);
+    }, 300);
+}
+
+/**
+ * Handle search button click
+ */
+function handleSearchButtonClick() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        const query = searchInput.value;
+        
+        // Clear any pending debounce timer
+        if (searchDebounceTimer) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = null;
+        }
+        
+        // Perform search immediately
+        performSearch(query);
+    }
+}
+
+// ===================================
 // Initialization
 // ===================================
 
@@ -1004,8 +1133,8 @@ async function handleConfirmDelete() {
  * Initialize the application
  */
 function init() {
-    // Load resources on page load
-    loadResources();
+    // Load resources on page load (using search with empty query for topological sort)
+    performSearch('');
     
     // Set up event listeners
     setupEventListeners();
@@ -1015,6 +1144,26 @@ function init() {
  * Set up all event listeners
  */
 function setupEventListeners() {
+    // Search input - debounced search
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearchInput);
+        
+        // Also handle Enter key for immediate search
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSearchButtonClick();
+            }
+        });
+    }
+    
+    // Search button - immediate search
+    const searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+        searchButton.addEventListener('click', handleSearchButtonClick);
+    }
+    
     // Create button - open modal
     const createButton = document.getElementById('createButton');
     if (createButton) {

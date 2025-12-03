@@ -209,7 +209,7 @@
   - **Validates: Requirements 11.5**
   - Generate random resources, delete them, verify UI removal
 
-- [ ] 18. Implement search functionality
+- [x] 18. Implement search functionality
   - Add event listener for search input
   - Implement debounced search to avoid excessive API calls
   - Call searchResources() API function
@@ -219,7 +219,7 @@
   - Display error message for circular dependencies
   - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ]* 18.1 Write property test for search display
+- [x] 18.1 Write property test for search display
   - **Property 22: Search displays topological order**
   - **Validates: Requirements 12.1**
   - Generate random search queries, verify topological order in results
