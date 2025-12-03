@@ -11,6 +11,8 @@ Thank you for your interest in contributing to this project! This guide will hel
 - [Documentation](#documentation)
 - [Pull Request Process](#pull-request-process)
 - [Release Process](#release-process)
+- [Troubleshooting](#troubleshooting)
+- [Getting Help](#getting-help)
 
 ## Development Setup
 
@@ -562,12 +564,570 @@ All releases are documented in:
 - GitHub Releases: Release notes and artifacts
 - Git tags: Version markers in repository history
 
+## Troubleshooting
+
+This section covers common issues you might encounter during development and their solutions.
+
+### Pre-commit Hook Issues
+
+#### Hooks Not Running
+
+**Problem:** Pre-commit hooks don't run when you commit.
+
+**Solution:**
+```bash
+# Reinstall hooks
+pre-commit install
+
+# Verify installation
+pre-commit run --all-files
+```
+
+#### Hook Installation Fails
+
+**Problem:** `pre-commit install` fails with permission errors.
+
+**Solution:**
+```bash
+# Ensure you're in the project root
+cd /path/to/fastapi-crud-backend
+
+# Check git is initialized
+git status
+
+# Try installing with verbose output
+pre-commit install -v
+```
+
+#### Black Formatting Conflicts
+
+**Problem:** Black reformats code differently than expected.
+
+**Solution:**
+- Black is opinionated and deterministic
+- Accept Black's formatting to maintain consistency
+- If you must exclude a file, add it to `pyproject.toml`:
+  ```toml
+  [tool.black]
+  extend-exclude = '''
+  /(
+    specific_file\.py
+  )/
+  '''
+  ```
+
+#### MyPy Type Errors
+
+**Problem:** MyPy reports type errors in your code.
+
+**Solution:**
+```bash
+# Run MyPy to see all errors
+mypy app/
+
+# Common fixes:
+# 1. Add type annotations
+def my_function(param: str) -> int:
+    return len(param)
+
+# 2. Use Optional for nullable values
+from typing import Optional
+def get_user(id: str) -> Optional[User]:
+    return user_or_none
+
+# 3. Ignore specific lines (use sparingly)
+result = some_untyped_library()  # type: ignore
+```
+
+### Testing Issues
+
+#### Tests Fail Locally But Pass in CI
+
+**Problem:** Tests pass in CI but fail on your machine (or vice versa).
+
+**Solution:**
+```bash
+# Ensure clean test environment
+pytest --cache-clear
+
+# Check for leftover test data
+rm -f test.db app.db
+
+# Verify Python version matches CI
+python --version
+
+# Run tests with same settings as CI
+pytest --cov=app --cov-report=xml
+```
+
+#### MongoDB Tests Skipped
+
+**Problem:** MongoDB tests are being skipped with "MongoDB not available".
+
+**Solution:**
+```bash
+# Check if MongoDB is running
+mongosh --eval "db.version()"
+
+# Start MongoDB if not running
+# macOS
+brew services start mongodb-community
+
+# Linux
+sudo systemctl start mongod
+
+# Docker
+docker start mongodb
+# or
+docker run -d -p 27017:27017 --name mongodb mongo:7.0
+
+# Verify connection
+python -c "from pymongo import MongoClient; print(MongoClient('mongodb://localhost:27017').server_info())"
+```
+
+#### Hypothesis Generates Failing Examples
+
+**Problem:** Property-based tests fail with specific counterexamples.
+
+**Solution:**
+1. **Examine the counterexample** - Hypothesis shows the minimal failing case
+2. **Determine if it's a bug** - Is the behavior correct for this input?
+3. **Fix the code or test**:
+   - If it's a bug: Fix the implementation
+   - If it's invalid input: Update the strategy to exclude it
+   - If it's expected behavior: Update the test assertion
+
+```python
+# Example: Excluding invalid inputs
+from hypothesis import given, assume
+from tests.strategies import resource_create_strategy
+
+@given(resource_data=resource_create_strategy())
+async def test_create(resource_data):
+    # Skip invalid cases
+    assume(len(resource_data.name) > 0)
+    # Test continues...
+```
+
+#### Test Database Pollution
+
+**Problem:** Tests fail due to data from previous test runs.
+
+**Solution:**
+```bash
+# Clean all test databases
+rm -f test.db app.db
+
+# For MongoDB, tests use unique databases
+# But you can manually clean if needed
+mongosh --eval "db.getMongo().getDBNames().forEach(function(name) {
+  if (name.startsWith('test_')) db.getSiblingDB(name).dropDatabase();
+})"
+
+# Run tests with fresh fixtures
+pytest --cache-clear
+```
+
+### Dependency Issues
+
+#### Dependency Installation Fails
+
+**Problem:** `pip install -r requirements.txt` fails.
+
+**Solution:**
+```bash
+# Update pip first
+pip install --upgrade pip
+
+# Try installing with verbose output
+pip install -v -r requirements.txt
+
+# If specific package fails, try installing it separately
+pip install problematic-package
+
+# Check for conflicting packages
+pip check
+
+# As last resort, recreate virtual environment
+deactivate
+rm -rf venv
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### Dependency Conflicts
+
+**Problem:** pip reports dependency conflicts.
+
+**Solution:**
+```bash
+# Check for conflicts
+pip check
+
+# View dependency tree
+pip install pipdeptree
+pipdeptree
+
+# Recompile requirements with latest compatible versions
+pip-compile --upgrade requirements.in
+pip-compile --upgrade requirements-dev.in
+
+# Install fresh
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+#### Safety Reports Vulnerabilities
+
+**Problem:** `safety check` reports security vulnerabilities.
+
+**Solution:**
+```bash
+# View detailed vulnerability report
+safety check --full-report
+
+# Update specific vulnerable package
+pip-compile --upgrade-package vulnerable-package requirements.in
+
+# If no fix available, check if it affects your usage
+# Document the decision to accept the risk (if appropriate)
+# Or find an alternative package
+```
+
+### Database Issues
+
+#### SQLite Database Locked
+
+**Problem:** "database is locked" error.
+
+**Solution:**
+```bash
+# Stop all running instances of the application
+pkill -f "python main.py"
+
+# Remove lock file
+rm -f app.db-journal
+
+# If problem persists, recreate database
+rm app.db
+python scripts/init_db.py
+```
+
+#### MongoDB Connection Refused
+
+**Problem:** "Connection refused" when connecting to MongoDB.
+
+**Solution:**
+```bash
+# Check if MongoDB is running
+mongosh
+
+# Check MongoDB status
+# macOS
+brew services list | grep mongodb
+
+# Linux
+sudo systemctl status mongod
+
+# Check if port is in use
+lsof -i :27017
+# or
+netstat -an | grep 27017
+
+# Check connection string format
+# Correct: mongodb://localhost:27017
+# Incorrect: mongodb://localhost:27017/
+```
+
+#### MongoDB Authentication Failed
+
+**Problem:** "Authentication failed" error.
+
+**Solution:**
+```bash
+# Verify credentials in .env file
+cat .env | grep MONGODB
+
+# Test connection with mongosh
+mongosh "mongodb://username:password@localhost:27017/admin"
+
+# Check authentication database
+# Default is 'admin', but might be different
+MONGODB_AUTH_SOURCE=admin  # or your auth database
+```
+
+### Documentation Issues
+
+#### Sphinx Build Fails
+
+**Problem:** `make html` fails with errors.
+
+**Solution:**
+```bash
+# Install documentation dependencies
+pip install -r docs/requirements.txt
+
+# Clean previous builds
+cd docs
+make clean
+
+# Build with verbose output
+sphinx-build -v source build/html
+
+# Common issues:
+# 1. Missing docstrings - Add them to your code
+# 2. Import errors - Ensure all dependencies installed
+# 3. Syntax errors in .rst files - Check RST syntax
+```
+
+#### Missing API Documentation
+
+**Problem:** API endpoints don't appear in generated docs.
+
+**Solution:**
+1. **Add docstrings** to your endpoint functions:
+   ```python
+   @router.get("/resources")
+   async def list_resources():
+       """
+       List all resources.
+
+       Returns:
+           List of all resources in the system.
+       """
+       pass
+   ```
+
+2. **Rebuild documentation:**
+   ```bash
+   cd docs
+   make clean
+   make html
+   ```
+
+### Environment Configuration Issues
+
+#### Settings Not Loading
+
+**Problem:** Application doesn't load settings from .env file.
+
+**Solution:**
+```bash
+# Verify .env file exists
+ls -la .env
+
+# Check file format (no spaces around =)
+# Correct: DATABASE_TYPE=sqlite
+# Incorrect: DATABASE_TYPE = sqlite
+
+# Verify environment variable names
+cat .env
+
+# Test settings loading
+python -c "from config.settings import get_settings; print(get_settings())"
+```
+
+#### Wrong Environment Loaded
+
+**Problem:** Application loads wrong environment configuration.
+
+**Solution:**
+```bash
+# Check ENVIRONMENT variable
+echo $ENVIRONMENT
+
+# Explicitly set environment
+export ENVIRONMENT=development
+
+# Or use specific .env file
+cp .env.development .env
+
+# Verify loaded settings
+python -c "from config.settings import get_settings; s = get_settings(); print(f'Environment: {s.environment}')"
+```
+
+### Git and Version Control Issues
+
+#### Large Files Blocked
+
+**Problem:** Pre-commit hook blocks commit due to large files.
+
+**Solution:**
+```bash
+# Check file sizes
+git ls-files | xargs ls -lh | sort -k5 -h
+
+# Remove large files from staging
+git reset HEAD large_file.bin
+
+# Add to .gitignore if it shouldn't be tracked
+echo "large_file.bin" >> .gitignore
+
+# If you must commit large files, use Git LFS
+git lfs install
+git lfs track "*.bin"
+```
+
+#### Merge Conflicts in Generated Files
+
+**Problem:** Merge conflicts in requirements.txt or other generated files.
+
+**Solution:**
+```bash
+# For requirements.txt conflicts:
+# 1. Accept one version
+git checkout --theirs requirements.txt
+
+# 2. Recompile from .in file
+pip-compile requirements.in
+
+# 3. Commit the result
+git add requirements.txt
+git commit -m "Resolve requirements.txt conflict"
+```
+
+### Performance Issues
+
+#### Tests Run Slowly
+
+**Problem:** Test suite takes too long to run.
+
+**Solution:**
+```bash
+# Run tests in parallel (requires pytest-xdist)
+pip install pytest-xdist
+pytest -n auto
+
+# Run only fast tests
+pytest -m "not slow"
+
+# Skip property tests during development
+pytest -m "not property"
+
+# Use faster database for tests
+# SQLite in-memory is faster than MongoDB for tests
+```
+
+#### Application Starts Slowly
+
+**Problem:** Application takes long time to start.
+
+**Solution:**
+```bash
+# Check for slow imports
+python -X importtime main.py 2>&1 | grep "import time"
+
+# Disable auto-reload in production
+API_RELOAD=false python main.py
+
+# Use production ASGI server
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
+```
+
+### CI/CD Issues
+
+#### GitHub Actions Failing
+
+**Problem:** CI pipeline fails but tests pass locally.
+
+**Solution:**
+1. **Check Python version** - CI might use different version
+2. **Check environment variables** - CI needs secrets configured
+3. **Check service dependencies** - MongoDB service might not be ready
+4. **Review CI logs** - Look for specific error messages
+
+```yaml
+# Add debugging to workflow
+- name: Debug environment
+  run: |
+    python --version
+    pip list
+    env | sort
+```
+
+#### Coverage Threshold Not Met
+
+**Problem:** CI fails due to insufficient code coverage.
+
+**Solution:**
+```bash
+# Check current coverage
+pytest --cov=app --cov-report=term-missing
+
+# Identify uncovered lines
+pytest --cov=app --cov-report=html
+open htmlcov/index.html
+
+# Add tests for uncovered code
+# Or adjust threshold in .coveragerc if appropriate
+```
+
+### Common Error Messages
+
+#### "ModuleNotFoundError: No module named 'app'"
+
+**Solution:**
+```bash
+# Ensure you're in project root
+pwd
+
+# Reinstall in development mode
+pip install -e .
+
+# Or add project root to PYTHONPATH
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+```
+
+#### "RuntimeError: Event loop is closed"
+
+**Solution:**
+```python
+# Use pytest-asyncio properly
+import pytest
+
+@pytest.mark.asyncio
+async def test_async_function():
+    result = await async_operation()
+    assert result is not None
+```
+
+#### "CircularDependencyError" in Tests
+
+**Solution:**
+```python
+# When creating test data, ensure no circular dependencies
+# Bad:
+resource_a = await repo.create({"name": "A", "dependencies": ["B"]})
+resource_b = await repo.create({"name": "B", "dependencies": ["A"]})
+
+# Good:
+resource_a = await repo.create({"name": "A", "dependencies": []})
+resource_b = await repo.create({"name": "B", "dependencies": [resource_a.id]})
+```
+
+### Getting More Help
+
+If you're still stuck after trying these solutions:
+
+1. **Check existing issues** - Someone might have encountered the same problem
+2. **Search the documentation** - Check README, docs/, and other .md files
+3. **Enable debug logging** - Set `LOG_LEVEL=DEBUG` in your .env file
+4. **Create a minimal reproduction** - Isolate the problem
+5. **Open an issue** - Provide:
+   - Python version (`python --version`)
+   - Operating system
+   - Steps to reproduce
+   - Full error message
+   - What you've already tried
+
 ## Getting Help
 
 If you have questions or need help:
 
+- Check the [Troubleshooting](#troubleshooting) section above
+- Search existing issues for similar problems
+- Review the documentation in `docs/` and `README.md`
 - Open an issue for bugs or feature requests
-- Check existing issues and documentation first
 - Be respectful and constructive in all interactions
 
 ## License
