@@ -76,7 +76,7 @@ def get_dependencies(obj: Union[Dict, Any]) -> List[str]:
 
 ## Backend Differences Handled
 
-1. **Return Types**: 
+1. **Return Types**:
    - SQLAlchemy returns ORM objects with attributes
    - MongoDB returns dictionaries with keys
 

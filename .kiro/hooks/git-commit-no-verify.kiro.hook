@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Git Commit with --no-verify",
+  "description": "Commits staged changes with --no-verify flag to bypass precommit hooks. Reuses the last commit message from .git/COMMIT_EDITMSG.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git commit --no-verify -F .git/COMMIT_EDITMSG"
+  }
+}

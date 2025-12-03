@@ -1,11 +1,11 @@
 """FastAPI router for resource endpoints"""
+
 from fastapi import APIRouter, Depends, Query, status
-from typing import List, Optional, Union
-from sqlalchemy.ext.asyncio import AsyncSession
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database_factory import get_db
-from app.schemas import ResourceCreate, ResourceUpdate, ResourceResponse, ErrorResponse
+from app.schemas import ErrorResponse, ResourceCreate, ResourceResponse, ResourceUpdate
 from app.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/api", tags=["resources"])
@@ -18,20 +18,19 @@ router = APIRouter(prefix="/api", tags=["resources"])
     responses={
         201: {"description": "Resource created successfully"},
         422: {"model": ErrorResponse, "description": "Validation error"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
 )
 async def create_resource(
-    data: ResourceCreate,
-    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
+    data: ResourceCreate, db: AsyncSession | AsyncIOMotorDatabase = Depends(get_db)
 ) -> ResourceResponse:
     """
     Create a new resource.
-    
+
     - **name**: Resource name (required, 1-100 characters)
     - **description**: Resource description (optional, max 500 characters)
     - **dependencies**: List of resource IDs this resource depends on
-    
+
     Returns the created resource with a unique identifier.
     """
     service = ResourceService(db)
@@ -41,19 +40,19 @@ async def create_resource(
 
 @router.get(
     "/resources",
-    response_model=List[ResourceResponse],
+    response_model=list[ResourceResponse],
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "List of all resources"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
 )
 async def list_resources(
-    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
-) -> List[ResourceResponse]:
+    db: AsyncSession | AsyncIOMotorDatabase = Depends(get_db),
+) -> list[ResourceResponse]:
     """
     Get all resources.
-    
+
     Returns a list of all resources in the system.
     """
     service = ResourceService(db)
@@ -68,24 +67,22 @@ async def list_resources(
     responses={
         200: {"description": "Resource retrieved successfully"},
         404: {"model": ErrorResponse, "description": "Resource not found"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
 )
 async def get_resource(
-    resource_id: str,
-    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
+    resource_id: str, db: AsyncSession | AsyncIOMotorDatabase = Depends(get_db)
 ) -> ResourceResponse:
     """
     Get a single resource by ID.
-    
+
     - **resource_id**: The unique identifier of the resource
-    
+
     Returns the resource data.
     """
     service = ResourceService(db)
     resource = await service.get_resource(resource_id)
     return resource
-
 
 
 @router.put(
@@ -96,22 +93,22 @@ async def get_resource(
         200: {"description": "Resource updated successfully"},
         404: {"model": ErrorResponse, "description": "Resource not found"},
         422: {"model": ErrorResponse, "description": "Validation error"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
 )
 async def update_resource(
     resource_id: str,
     data: ResourceUpdate,
-    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
+    db: AsyncSession | AsyncIOMotorDatabase = Depends(get_db),
 ) -> ResourceResponse:
     """
     Update an existing resource.
-    
+
     - **resource_id**: The unique identifier of the resource to update
     - **name**: Updated resource name (optional, 1-100 characters)
     - **description**: Updated resource description (optional, max 500 characters)
     - **dependencies**: Updated list of resource IDs this resource depends on (optional)
-    
+
     Returns the updated resource.
     """
     service = ResourceService(db)
@@ -125,20 +122,20 @@ async def update_resource(
     responses={
         204: {"description": "Resource deleted successfully"},
         404: {"model": ErrorResponse, "description": "Resource not found"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
 )
 async def delete_resource(
     resource_id: str,
     cascade: bool = Query(False, description="Delete all downstream dependencies"),
-    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
+    db: AsyncSession | AsyncIOMotorDatabase = Depends(get_db),
 ) -> None:
     """
     Delete a resource.
-    
+
     - **resource_id**: The unique identifier of the resource to delete
     - **cascade**: If true, delete all resources that depend on this resource (default: false)
-    
+
     Returns 204 No Content on success.
     """
     service = ResourceService(db)
@@ -148,23 +145,23 @@ async def delete_resource(
 
 @router.get(
     "/search",
-    response_model=List[ResourceResponse],
+    response_model=list[ResourceResponse],
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "Search results in topological order"},
         422: {"model": ErrorResponse, "description": "Circular dependency detected"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
 )
 async def search_resources(
-    q: Optional[str] = Query(None, description="Search query for name or description"),
-    db: Union[AsyncSession, AsyncIOMotorDatabase] = Depends(get_db)
-) -> List[ResourceResponse]:
+    q: str | None = Query(None, description="Search query for name or description"),
+    db: AsyncSession | AsyncIOMotorDatabase = Depends(get_db),
+) -> list[ResourceResponse]:
     """
     Search for resources and return them in topological order.
-    
+
     - **q**: Search query to match against name or description (optional)
-    
+
     If no query is provided, returns all resources in topological order.
     Dependencies always appear before dependents in the results.
     """

@@ -65,6 +65,115 @@ cp .env.example .env
 
 Edit `.env` to choose your database backend (see [Database Configuration](#database-configuration) below).
 
+## Development Setup
+
+If you're contributing to the project or want to set up the development environment with all tooling:
+
+### 1. Install Development Dependencies
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+This installs additional tools for development:
+- **pre-commit**: Git hooks for automated code quality checks
+- **black**: Code formatter
+- **ruff**: Fast Python linter
+- **mypy**: Static type checker
+- **pytest-cov**: Code coverage reporting
+
+### 2. Install Pre-commit Hooks
+
+Pre-commit hooks automatically check your code before each commit, catching issues early:
+
+```bash
+pre-commit install
+```
+
+This sets up hooks that will run automatically on `git commit`. The hooks will:
+- Format code with Black
+- Lint code with Ruff (and auto-fix issues when possible)
+- Type check code with MyPy
+- Check for trailing whitespace, large files, and other common issues
+
+### 3. Running Pre-commit Manually
+
+You can run the hooks manually on all files without committing:
+
+```bash
+# Run all hooks on all files
+pre-commit run --all-files
+
+# Run all hooks on staged files only
+pre-commit run
+
+# Run a specific hook
+pre-commit run black --all-files
+pre-commit run ruff --all-files
+pre-commit run mypy --all-files
+```
+
+### 4. Bypassing Pre-commit Hooks (Not Recommended)
+
+In rare cases where you need to commit without running hooks:
+
+```bash
+git commit --no-verify -m "Your commit message"
+```
+
+**Note:** This should only be used in exceptional circumstances, as it bypasses code quality checks.
+
+### 5. Updating Pre-commit Hooks
+
+Keep your hooks up to date with the latest versions:
+
+```bash
+pre-commit autoupdate
+```
+
+### Development Workflow
+
+With pre-commit hooks installed, your typical workflow becomes:
+
+1. Make code changes
+2. Stage your changes: `git add .`
+3. Commit: `git commit -m "Your message"`
+4. Hooks run automatically:
+   - If hooks pass ✅: Commit succeeds
+   - If hooks fail ❌: Commit is blocked, issues are reported
+5. Fix any issues reported by the hooks
+6. Stage fixes: `git add .`
+7. Commit again: `git commit -m "Your message"`
+
+**Example of hooks catching issues:**
+
+```bash
+$ git commit -m "Add new feature"
+
+Trim trailing whitespace...........................................Passed
+Fix end of files...............................................Passed
+Check YAML syntax..............................................Passed
+Check for large files..........................................Passed
+Format code with Black.........................................Failed
+- hook id: black
+- files were modified by this hook
+
+reformatted app/services/new_service.py
+1 file reformatted.
+
+Lint code with Ruff............................................Passed
+Type check with MyPy...........................................Failed
+- hook id: mypy
+- exit code: 1
+
+app/services/new_service.py:15: error: Function is missing a return type annotation
+```
+
+In this example, Black automatically formatted the file, and MyPy found a type annotation issue. You would:
+1. Review the changes Black made
+2. Add the missing type annotation
+3. Stage and commit again
+
 ## Database Configuration
 
 The application supports two database backends: **SQLite** (default) and **MongoDB**. Choose the backend that best fits your deployment needs.
@@ -950,7 +1059,7 @@ import asyncio
 
 async def main():
     base_url = "http://localhost:8000"
-    
+
     async with httpx.AsyncClient() as client:
         # Create a resource
         response = await client.post(
@@ -963,17 +1072,17 @@ async def main():
         )
         resource = response.json()
         print(f"Created resource: {resource['id']}")
-        
+
         # Get all resources
         response = await client.get(f"{base_url}/api/resources")
         resources = response.json()
         print(f"Total resources: {len(resources)}")
-        
+
         # Search with topological sort
         response = await client.get(f"{base_url}/api/search?q=test")
         results = response.json()
         print(f"Search results: {len(results)}")
-        
+
         # Update resource
         response = await client.put(
             f"{base_url}/api/resources/{resource['id']}",
@@ -984,7 +1093,7 @@ async def main():
         )
         updated = response.json()
         print(f"Updated: {updated['name']}")
-        
+
         # Delete resource
         response = await client.delete(
             f"{base_url}/api/resources/{resource['id']}"
@@ -1016,7 +1125,7 @@ async function getAllResources() {
 }
 
 async function searchResources(query) {
-  const url = query 
+  const url = query
     ? `${API_BASE}/search?q=${encodeURIComponent(query)}`
     : `${API_BASE}/search`;
   const response = await fetch(url);
@@ -1046,17 +1155,17 @@ async function example() {
   const db = await createResource('Database', 'PostgreSQL database', []);
   const api = await createResource('API', 'Backend API', [db.id]);
   const frontend = await createResource('Frontend', 'React app', [api.id]);
-  
+
   // Get topological order
   const sorted = await searchResources();
   console.log('Deployment order:', sorted.map(r => r.name));
-  
+
   // Update a resource
   await updateResource(api.id, {
     name: 'API v2',
     description: 'Updated backend API'
   });
-  
+
   // Delete with cascade
   await deleteResource(api.id, true); // Deletes API and Frontend
 }

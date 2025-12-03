@@ -448,7 +448,7 @@ services:
       - MONGODB_DATABASE=fastapi_crud
     depends_on:
       - mongodb
-  
+
   mongodb:
     image: mongo:7.0
     ports:

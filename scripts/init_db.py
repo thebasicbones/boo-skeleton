@@ -1,13 +1,14 @@
 """Database initialization script"""
 import asyncio
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add parent directory to path to import app modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 from app.database_factory import init_database
 
 # Load environment variables
@@ -18,7 +19,7 @@ async def main():
     """Initialize the database"""
     db_type = os.getenv("DATABASE_TYPE", "sqlite")
     print(f"Initializing {db_type} database...")
-    
+
     try:
         await init_database()
         print("Database initialized successfully!")

@@ -182,7 +182,7 @@ All errors are logged and included in the summary report.
 
 **Error**: `Failed to connect to MongoDB`
 
-**Solution**: 
+**Solution**:
 - Ensure MongoDB is running: `mongod --version`
 - Check connection URL is correct
 - Verify network connectivity

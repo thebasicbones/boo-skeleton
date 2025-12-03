@@ -1,0 +1,21 @@
+# Development dependencies
+
+# Pre-commit hooks
+pre-commit==3.5.0
+
+# Code formatting and linting
+black==23.12.1
+ruff==0.1.9
+
+# Type checking
+mypy==1.7.1
+
+# Testing tools (already in requirements.txt but listed here for clarity)
+# pytest==7.4.3
+# pytest-asyncio==0.21.1
+# hypothesis==6.92.1
+# httpx==0.25.2
+
+# Coverage
+pytest-cov==4.1.0
+coverage==7.3.4

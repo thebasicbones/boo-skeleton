@@ -39,7 +39,7 @@ Use the `db_backend` fixture to automatically test both backends:
 async def test_both_backends(db_backend):
     """Test runs automatically against both SQLite and MongoDB"""
     backend_name, repository = db_backend
-    
+
     resource = await repository.create(resource_data)
     assert resource is not None
     print(f"✓ Test passed for {backend_name}")
@@ -160,10 +160,10 @@ async def test_create_roundtrip(sqlalchemy_repository, resource_data):
     """
     # Create resource
     created = await sqlalchemy_repository.create(resource_data)
-    
+
     # Retrieve resource
     retrieved = await sqlalchemy_repository.get_by_id(created.id)
-    
+
     # Verify round-trip
     assert retrieved.name == created.name
     assert retrieved.description == created.description
@@ -189,11 +189,11 @@ async def test_backend_equivalence(resource_data):
     # Setup both backends
     sqlalchemy_repo = ...  # Create SQLAlchemy repository
     mongodb_repo = ...     # Create MongoDB repository
-    
+
     # Test both backends
     sqlalchemy_result = await sqlalchemy_repo.create(resource_data)
     mongodb_result = await mongodb_repo.create(resource_data)
-    
+
     # Verify equivalence
     assert sqlalchemy_result.name == mongodb_result['name']
 ```
@@ -302,11 +302,11 @@ async def test_crud_roundtrip(sqlalchemy_repository, resource_data):
     # CREATE
     created = await sqlalchemy_repository.create(resource_data)
     assert created is not None
-    
+
     # READ
     retrieved = await sqlalchemy_repository.get_by_id(created.id)
     assert retrieved is not None
-    
+
     # VERIFY ROUND-TRIP
     assert retrieved.id == created.id
     assert retrieved.name == created.name

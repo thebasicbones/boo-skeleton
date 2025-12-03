@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.database_factory import init_database, close_database
+from app.database_factory import close_database, init_database
 from app.error_handlers import register_exception_handlers
 from app.routers import resources
 
@@ -20,10 +20,7 @@ from app.routers import resources
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler("app.log")
-    ]
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("app.log")],
 )
 
 logger = logging.getLogger(__name__)
@@ -43,9 +40,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}", exc_info=True)
         raise
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down application...")
     await close_database()
@@ -56,23 +53,23 @@ app = FastAPI(
     title="FastAPI CRUD Backend",
     description="""
     A RESTful API backend with CRUD operations and topological sorting capabilities.
-    
+
     ## Features
-    
+
     * **Create** resources with dependencies
     * **Read** individual resources or list all resources
     * **Update** existing resources and their dependencies
     * **Delete** resources with optional cascade deletion
     * **Search** resources with topological sorting based on dependencies
-    
+
     ## Topological Sorting
-    
+
     The search endpoint returns resources ordered by their dependencies,
     ensuring that dependencies always appear before their dependents.
     This is useful for processing resources in the correct order.
-    
+
     ## Dependency Management
-    
+
     Resources can depend on other resources, forming a directed acyclic graph (DAG).
     The system automatically detects and prevents circular dependencies.
     """,
@@ -80,7 +77,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure CORS middleware for frontend access
@@ -111,7 +108,7 @@ async def root():
         "message": "FastAPI CRUD Backend API",
         "version": "1.0.0",
         "docs": "/docs",
-        "redoc": "/redoc"
+        "redoc": "/redoc",
     }
 
 
@@ -120,20 +117,17 @@ async def health_check():
     """
     Health check endpoint - returns application status.
     """
-    return {
-        "status": "healthy",
-        "service": "fastapi-crud-backend"
-    }
+    return {"status": "healthy", "service": "fastapi-crud-backend"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     # Run the application
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,  # Enable auto-reload for development
-        log_level="info"
+        log_level="info",
     )

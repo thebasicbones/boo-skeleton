@@ -1,9 +1,11 @@
 """SQLAlchemy database connection and session management"""
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import StaticPool
-from sqlalchemy import event
-from app.models.sqlalchemy_resource import Base
 import os
+
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
+from app.models.sqlalchemy_resource import Base
 
 # Database URL - use SQLite by default
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
@@ -14,24 +16,22 @@ engine = create_async_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
     poolclass=StaticPool if "sqlite" in DATABASE_URL else None,
-    echo=False  # Set to True for SQL query logging
+    echo=False,  # Set to True for SQL query logging
 )
 
 # Enable foreign key constraints for SQLite
 if "sqlite" in DATABASE_URL:
+
     @event.listens_for(engine.sync_engine, "connect")
     def set_sqlite_pragma(dbapi_conn, connection_record):
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
+
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False
+    engine, class_=AsyncSession, expire_on_commit=False, autocommit=False, autoflush=False
 )
 
 
