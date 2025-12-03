@@ -151,7 +151,7 @@
   - Add error handling for network failures
   - _Requirements: 8.1, 9.1, 10.2, 11.2, 11.3, 12.1_
 
-- [ ] 14. Implement resource display functionality
+- [x] 14. Implement resource display functionality
   - Create renderResources() function to display resource list
   - Implement dependency visualization (show dependency names/arrows)
   - Add empty state message when no resources exist
@@ -159,12 +159,12 @@
   - Add loading state indicator
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 13.3_
 
-- [ ]* 14.1 Write property test for resource display
+- [x] 14.1 Write property test for resource display
   - **Property 14: Resource display completeness**
   - **Validates: Requirements 8.4**
   - Generate random resources, verify all attributes displayed
 
-- [ ] 15. Implement create resource functionality
+- [x] 15. Implement create resource functionality
   - Add event listener for create form submission
   - Implement form validation before submission
   - Call createResource() API function
@@ -173,13 +173,13 @@
   - Clear form after successful creation
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ]* 15.1 Write property test for create form submission
+- [x] 15.1 Write property test for create form submission
   - **Property 15: Create form submission**
   - **Property 16: Dependency inclusion in create**
   - **Validates: Requirements 9.1, 9.2, 9.4**
   - Generate random form data, verify API calls and UI updates
 
-- [ ] 16. Implement update resource functionality
+- [x] 16. Implement update resource functionality
   - Add event listener for edit button clicks
   - Populate edit form with current resource data
   - Implement form submission for updates
@@ -188,14 +188,14 @@
   - Show error messages for failures
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ]* 16.1 Write property test for update functionality
+- [x] 16.1 Write property test for update functionality
   - **Property 18: Edit form population**
   - **Property 19: Update form submission**
   - **Property 20: Dependency modification in update**
   - **Validates: Requirements 10.1, 10.2, 10.3**
   - Generate random resources and updates, verify form population and submission
 
-- [ ] 17. Implement delete resource functionality
+- [x] 17. Implement delete resource functionality
   - Add event listener for delete button clicks
   - Show confirmation modal with cascade option
   - Implement cascade checkbox in confirmation dialog
@@ -204,7 +204,7 @@
   - Show error messages for failures
   - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [ ]* 17.1 Write property test for delete functionality
+- [x] 17.1 Write property test for delete functionality
   - **Property 21: Delete removes from UI**
   - **Validates: Requirements 11.5**
   - Generate random resources, delete them, verify UI removal

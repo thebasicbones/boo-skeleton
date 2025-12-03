@@ -330,6 +330,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
                         {'_id': {'$in': dependents_to_delete}}
                     )
                     logger.info(f"Deleted {len(dependents_to_delete)} dependent resources")
+            else:
+                # Non-cascade delete: remove this resource ID from all other resources' dependencies
+                # This ensures that dependents are preserved but their dependency lists are updated
+                await self.collection.update_many(
+                    {'dependencies': resource_id},
+                    {'$pull': {'dependencies': resource_id}}
+                )
+                logger.info(f"Removed resource {resource_id} from dependency lists of other resources")
             
             # Delete the resource itself
             result = await self.collection.delete_one({'_id': resource_id})
