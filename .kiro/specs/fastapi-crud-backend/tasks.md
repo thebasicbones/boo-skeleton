@@ -119,7 +119,7 @@
 - [x] 10. Checkpoint - Ensure all backend tests pass
   - Ensure all tests pass, ask the user if questions arise
 
-- [ ] 11. Create frontend HTML structure
+- [x] 11. Create frontend HTML structure
   - Create index.html with semantic HTML5 structure
   - Add header section with title
   - Add search bar section
@@ -129,7 +129,7 @@
   - Link CSS and JavaScript files
   - _Requirements: 8.1, 9.1, 10.1, 11.1, 12.1, 13.1_
 
-- [ ] 12. Implement frontend CSS styling
+- [x] 12. Implement frontend CSS styling
   - Create styles.css with clean, minimal design
   - Style header and search bar
   - Style resource cards/list items
@@ -140,7 +140,7 @@
   - Add visual feedback for interactions (hover, focus, active states)
   - _Requirements: 8.2, 13.1, 13.2_
 
-- [ ] 13. Implement frontend API client
+- [x] 13. Implement frontend API client
   - Create app.js with API base URL configuration
   - Implement fetchResources() to get all resources
   - Implement fetchResource(id) to get single resource
