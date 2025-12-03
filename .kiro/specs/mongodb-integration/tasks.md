@@ -48,8 +48,8 @@
   - **Property 3: Graceful connection cleanup**
   - **Validates: Requirements 1.5**
 
-- [ ] 5. Implement MongoDB repository
-- [ ] 5.1 Create MongoDB resource repository
+- [x] 5. Implement MongoDB repository
+- [x] 5.1 Create MongoDB resource repository
   - Create `app/repositories/mongodb_resource_repository.py` with `MongoDBResourceRepository` class
   - Implement `__init__()` to accept Motor database instance
   - Implement helper methods for document-to-model and model-to-document conversion
@@ -57,7 +57,7 @@
   - Ensure proper datetime handling (UTC timestamps)
   - _Requirements: 2.1, 3.1, 3.2, 3.3_
 
-- [ ] 5.2 Implement MongoDB repository CRUD operations
+- [x] 5.2 Implement MongoDB repository CRUD operations
   - Implement `create()` method with dependency handling
   - Implement `get_by_id()` method
   - Implement `get_all()` method
@@ -67,29 +67,29 @@
   - Handle MongoDB-specific errors and translate to custom exceptions
   - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6, 3.4, 6.1, 6.2_
 
-- [ ] 5.3 Create MongoDB indexes
+- [x] 5.3 Create MongoDB indexes
   - Create index on `name` field for search performance
   - Create index on `dependencies` array for relationship queries
   - Implement index creation in `init_mongodb()` function
   - _Requirements: 2.6_
 
-- [ ]* 5.4 Write property test for CRUD round-trip consistency
+- [x] 5.4 Write property test for CRUD round-trip consistency
   - **Property 5: CRUD round-trip consistency**
   - **Validates: Requirements 2.2, 2.3, 3.1, 3.2, 3.3**
 
-- [ ]* 5.5 Write property test for update persistence
+- [x] 5.5 Write property test for update persistence
   - **Property 6: Update persistence**
   - **Validates: Requirements 2.4, 3.3**
 
-- [ ]* 5.6 Write property test for delete completeness
+- [x] 5.6 Write property test for delete completeness
   - **Property 7: Delete completeness**
   - **Validates: Requirements 2.5**
 
-- [ ]* 5.7 Write property test for relationship preservation
+- [x] 5.7 Write property test for relationship preservation
   - **Property 8: Relationship preservation**
   - **Validates: Requirements 3.4**
 
-- [ ]* 5.8 Write property test for schema field completeness
+- [x] 5.8 Write property test for schema field completeness
   - **Property 9: Schema field completeness**
   - **Validates: Requirements 3.1**
 
