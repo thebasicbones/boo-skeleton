@@ -1,6 +1,5 @@
 """Database factory for backend selection and initialization"""
 import logging
-import os
 from collections.abc import AsyncGenerator
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -10,6 +9,7 @@ from app.exceptions import DatabaseConnectionError
 from app.repositories.base_resource_repository import BaseResourceRepository
 from app.repositories.mongodb_resource_repository import MongoDBResourceRepository
 from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ DATABASE_TYPE_MONGODB = "mongodb"
 
 def get_database_type() -> str:
     """
-    Get the configured database backend type from environment variables.
+    Get the configured database backend type from settings.
 
     Returns:
         str: Database type ("sqlite" or "mongodb")
@@ -28,7 +28,8 @@ def get_database_type() -> str:
     Raises:
         DatabaseConnectionError: If DATABASE_TYPE is invalid
     """
-    db_type = os.getenv("DATABASE_TYPE", DATABASE_TYPE_SQLITE).lower()
+    settings = get_settings()
+    db_type = settings.database_type.lower()
 
     if db_type not in [DATABASE_TYPE_SQLITE, DATABASE_TYPE_MONGODB]:
         raise DatabaseConnectionError(

@@ -1,14 +1,14 @@
 """SQLAlchemy database connection and session management"""
-import os
-
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from app.models.sqlalchemy_resource import Base
+from config.settings import get_settings
 
-# Database URL - use SQLite by default
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
+# Get database URL from settings
+settings = get_settings()
+DATABASE_URL = settings.get_database_url()
 
 # Create async engine
 # For SQLite, we use StaticPool to ensure the same connection is reused

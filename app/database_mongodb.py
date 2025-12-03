@@ -1,18 +1,19 @@
 """MongoDB database connection and client management"""
 import logging
-import os
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 from app.exceptions import DatabaseConnectionError
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
-# MongoDB configuration from environment variables
-MONGODB_URL = os.getenv("DATABASE_URL", "mongodb://localhost:27017")
-MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "fastapi_crud")
-MONGODB_TIMEOUT = int(os.getenv("MONGODB_TIMEOUT", "5000"))
+# Get MongoDB configuration from settings
+settings = get_settings()
+MONGODB_URL = settings.get_database_url()
+MONGODB_DATABASE = settings.mongodb_database or "fastapi_crud"
+MONGODB_TIMEOUT = settings.mongodb_timeout
 
 # Global MongoDB client instance
 _mongodb_client: AsyncIOMotorClient | None = None
