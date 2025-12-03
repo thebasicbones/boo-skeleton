@@ -63,3 +63,6 @@ Thumbs.db
 # Documentation
 docs/build/
 docs/source/_build/
+
+# Temporary files
+temp/

@@ -10,6 +10,7 @@ Thank you for your interest in contributing to this project! This guide will hel
 - [Dependency Management](#dependency-management)
 - [Documentation](#documentation)
 - [Pull Request Process](#pull-request-process)
+- [Release Process](#release-process)
 
 ## Development Setup
 
@@ -374,6 +375,192 @@ When reviewing pull requests:
 - Look for potential bugs or edge cases
 - Provide constructive feedback
 - Approve when satisfied with the changes
+
+## Release Process
+
+We follow semantic versioning and maintain a detailed changelog for all releases.
+
+### Semantic Versioning
+
+Version numbers follow the format `MAJOR.MINOR.PATCH`:
+
+- **MAJOR**: Incompatible API changes or breaking changes
+- **MINOR**: New functionality in a backwards-compatible manner
+- **PATCH**: Backwards-compatible bug fixes
+
+Examples:
+- `1.0.0` → `1.0.1`: Bug fix (patch)
+- `1.0.1` → `1.1.0`: New feature (minor)
+- `1.1.0` → `2.0.0`: Breaking change (major)
+
+### Changelog Management
+
+All changes must be documented in `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/) format.
+
+#### During Development
+
+When making changes, add entries to the `[Unreleased]` section under the appropriate category:
+
+- **Added**: New features
+- **Changed**: Changes in existing functionality
+- **Deprecated**: Soon-to-be removed features
+- **Removed**: Removed features
+- **Fixed**: Bug fixes
+- **Security**: Security fixes
+
+Example:
+
+```markdown
+## [Unreleased]
+
+### Added
+- New endpoint for batch resource creation
+- Support for resource tagging
+
+### Fixed
+- Circular dependency detection for complex graphs
+- Memory leak in topological sort algorithm
+```
+
+#### Creating a Release
+
+1. **Prepare the release**:
+   ```bash
+   # Ensure you're on the main branch and up to date
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Update VERSION file**:
+   ```bash
+   # Edit VERSION file with new version number
+   echo "1.1.0" > VERSION
+   ```
+
+3. **Update CHANGELOG.md**:
+   - Move all `[Unreleased]` entries to a new version section
+   - Add the release date
+   - Update comparison links at the bottom
+
+   Example:
+   ```markdown
+   ## [Unreleased]
+
+   ### Added
+
+   ### Changed
+
+   ## [1.1.0] - 2024-12-15
+
+   ### Added
+   - New endpoint for batch resource creation
+   - Support for resource tagging
+
+   ### Fixed
+   - Circular dependency detection for complex graphs
+   ```
+
+4. **Commit version changes**:
+   ```bash
+   git add VERSION CHANGELOG.md
+   git commit -m "chore: release version 1.1.0"
+   ```
+
+5. **Create and push tag**:
+   ```bash
+   # Create annotated tag
+   git tag -a v1.1.0 -m "Release version 1.1.0"
+
+   # Push commit and tag
+   git push origin main
+   git push origin v1.1.0
+   ```
+
+6. **Create GitHub Release**:
+   - Go to the repository's Releases page
+   - Click "Draft a new release"
+   - Select the tag you just created (v1.1.0)
+   - Title: "Version 1.1.0"
+   - Description: Copy the relevant section from CHANGELOG.md
+   - Click "Publish release"
+
+7. **Verify the release**:
+   - Check that CI/CD workflows complete successfully
+   - Verify the release appears on GitHub
+   - Test the release in a clean environment
+
+### Release Checklist
+
+Before creating a release, ensure:
+
+- [ ] All tests pass (`pytest`)
+- [ ] Code coverage is acceptable (`pytest --cov=app`)
+- [ ] All pre-commit hooks pass (`pre-commit run --all-files`)
+- [ ] Documentation is up to date (`cd docs && make html`)
+- [ ] VERSION file is updated
+- [ ] CHANGELOG.md is updated with all changes
+- [ ] No uncommitted changes
+- [ ] All CI/CD checks pass on main branch
+
+### Hotfix Releases
+
+For urgent bug fixes:
+
+1. Create a hotfix branch from the release tag:
+   ```bash
+   git checkout -b hotfix/1.0.1 v1.0.0
+   ```
+
+2. Make the fix and commit:
+   ```bash
+   git commit -m "fix: critical bug description"
+   ```
+
+3. Update VERSION and CHANGELOG.md:
+   ```bash
+   echo "1.0.1" > VERSION
+   # Update CHANGELOG.md with fix details
+   git add VERSION CHANGELOG.md
+   git commit -m "chore: release version 1.0.1"
+   ```
+
+4. Merge to main and tag:
+   ```bash
+   git checkout main
+   git merge hotfix/1.0.1
+   git tag -a v1.0.1 -m "Release version 1.0.1"
+   git push origin main
+   git push origin v1.0.1
+   ```
+
+5. Create GitHub release as described above
+
+### Release Automation
+
+The project includes a GitHub Actions workflow (`.github/workflows/release.yml`) that automates parts of the release process:
+
+- Triggers on version tag pushes (v*.*.*)
+- Runs full test suite
+- Builds documentation
+- Creates GitHub release with changelog
+
+To use the automated workflow:
+
+```bash
+# After updating VERSION and CHANGELOG.md
+git tag -a v1.1.0 -m "Release version 1.1.0"
+git push origin v1.1.0
+```
+
+The workflow will handle the rest automatically.
+
+### Version History
+
+All releases are documented in:
+- `CHANGELOG.md`: Detailed change history
+- `VERSION`: Current version number
+- GitHub Releases: Release notes and artifacts
+- Git tags: Version markers in repository history
 
 ## Getting Help
 
