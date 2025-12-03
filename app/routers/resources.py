@@ -27,11 +27,30 @@ async def create_resource(
     """
     Create a new resource.
 
-    - **name**: Resource name (required, 1-100 characters)
-    - **description**: Resource description (optional, max 500 characters)
-    - **dependencies**: List of resource IDs this resource depends on
+    Args:
+        data: Resource creation data containing name, description, and dependencies
+        db: Database connection (injected by FastAPI)
 
-    Returns the created resource with a unique identifier.
+    Returns:
+        ResourceResponse: The created resource with a unique identifier
+
+    Raises:
+        ValidationError: If dependencies are invalid or would create a circular dependency
+        HTTPException: 422 for validation errors, 500 for server errors
+
+    Example::
+
+        POST /api/resources
+        {
+            "name": "Frontend App",
+            "description": "React frontend application",
+            "dependencies": ["backend-api-id", "auth-service-id"]
+        }
+
+    Parameters:
+        - **name**: Resource name (required, 1-100 characters)
+        - **description**: Resource description (optional, max 500 characters)
+        - **dependencies**: List of resource IDs this resource depends on
     """
     service = ResourceService(db)
     resource = await service.create_resource(data)
@@ -160,10 +179,30 @@ async def search_resources(
     """
     Search for resources and return them in topological order.
 
-    - **q**: Search query to match against name or description (optional)
+    Args:
+        q: Search query to match against name or description (optional)
+        db: Database connection (injected by FastAPI)
 
-    If no query is provided, returns all resources in topological order.
-    Dependencies always appear before dependents in the results.
+    Returns:
+        list[ResourceResponse]: List of matching resources in topological order
+
+    Raises:
+        ValidationError: If circular dependency is detected in results
+        HTTPException: 422 for circular dependencies, 500 for server errors
+
+    Example::
+
+        GET /api/search?q=frontend
+
+    Returns all resources matching "frontend" in name or description,
+    ordered so dependencies appear before dependents.
+
+    Parameters:
+        - **q**: Search query to match against name or description (optional)
+
+    Note:
+        If no query is provided, returns all resources in topological order.
+        Dependencies always appear before dependents in the results.
     """
     service = ResourceService(db)
     resources = await service.search_resources(q)

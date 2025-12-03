@@ -19,3 +19,9 @@ mypy==1.7.1
 # Coverage
 pytest-cov==4.1.0
 coverage==7.3.4
+
+# Dependency management
+pip-tools==7.3.0
+
+# Security scanning
+safety==2.3.4
