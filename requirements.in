@@ -1,0 +1,27 @@
+# Production Dependencies
+# This file contains unpinned dependencies for production use.
+# Run `pip-compile requirements.in` to generate requirements.txt with pinned versions.
+
+# FastAPI and ASGI server
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+aiosqlite
+greenlet
+motor
+pymongo
+
+# Validation
+pydantic
+pydantic-settings
+
+# Testing
+pytest
+pytest-asyncio
+hypothesis
+httpx
+
+# Environment management
+python-dotenv

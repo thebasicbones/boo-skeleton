@@ -1,0 +1,26 @@
+# Development Dependencies
+# This file contains unpinned dependencies for development use.
+# Run `pip-compile requirements-dev.in` to generate requirements-dev.txt with pinned versions.
+
+# Include production dependencies
+-c requirements.txt
+
+# Pre-commit hooks
+pre-commit
+
+# Code formatting and linting
+black
+ruff
+
+# Type checking
+mypy
+
+# Coverage
+pytest-cov
+coverage
+
+# Dependency management
+pip-tools
+
+# Security scanning
+safety
