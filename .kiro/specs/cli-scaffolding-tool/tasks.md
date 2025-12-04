@@ -172,7 +172,7 @@
   - Test command registration and routing
   - _Requirements: 1.3, 1.4_
 
-- [-] 13. Create package distribution files
+- [ ] 13. Create package distribution files
   - Finalize pyproject.toml with all metadata (name, version, description, author, classifiers)
   - Create/update MANIFEST.in to include all template files
   - Create setup.py if needed for backward compatibility
