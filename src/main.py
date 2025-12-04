@@ -103,7 +103,7 @@ register_exception_handlers(app)
 app.include_router(resources.router)
 
 # Mount static files directory for frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", tags=["root"])
