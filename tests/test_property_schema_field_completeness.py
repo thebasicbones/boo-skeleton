@@ -90,7 +90,11 @@ def is_mongodb_available():
 @pytest.mark.property
 @pytest.mark.asyncio
 @pytest.mark.skipif(not is_mongodb_available(), reason="MongoDB not available")
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(
+    max_examples=100,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    deadline=1500,  # Allow 1.5 seconds for database operations
+)
 @given(resource_data=resource_create_strategy())
 async def test_mongodb_schema_field_completeness(resource_data):
     """

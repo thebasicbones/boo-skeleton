@@ -1,0 +1,237 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v1.0.0, v2.1.3, etc.
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Remove 'v' prefix from tag to get version
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Validate VERSION file matches tag
+        run: |
+          FILE_VERSION=$(cat VERSION | tr -d '[:space:]')
+          TAG_VERSION="${{ steps.get_version.outputs.version }}"
+          echo "VERSION file contains: $FILE_VERSION"
+          echo "Git tag version: $TAG_VERSION"
+          if [ "$FILE_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: VERSION file ($FILE_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "✓ VERSION file matches tag"
+
+      - name: Validate semantic versioning format
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "ERROR: Version $VERSION does not follow semantic versioning (MAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+          echo "✓ Version follows semantic versioning format"
+
+      - name: Check CHANGELOG.md contains version
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          if ! grep -q "\[$VERSION\]" CHANGELOG.md; then
+            echo "ERROR: CHANGELOG.md does not contain entry for version $VERSION"
+            exit 1
+          fi
+          echo "✓ CHANGELOG.md contains version entry"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=app --cov-report=xml --cov-report=html --cov-fail-under=80
+        env:
+          DATABASE_TYPE: sqlite
+          DATABASE_URL: sqlite:///./test.db
+
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-docs-${{ hashFiles('docs/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-docs-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r docs/requirements.txt
+
+      - name: Build Sphinx documentation
+        run: |
+          cd docs
+          make html
+          echo "✓ Documentation built successfully"
+
+      - name: Archive documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: docs/build/html/
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate, test, build-docs]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+
+          # Extract the section for this version from CHANGELOG.md
+          # Find the line number of current version and next version
+          START_LINE=$(grep -n "^## \[$VERSION\]" CHANGELOG.md | cut -d: -f1)
+          NEXT_LINE=$(grep -n "^## \[" CHANGELOG.md | awk -F: -v start="$START_LINE" '$1 > start {print $1; exit}')
+
+          if [ -z "$START_LINE" ]; then
+            echo "WARNING: Could not find version $VERSION in CHANGELOG.md"
+            echo "Release version $VERSION" > release_notes.md
+          else
+            if [ -z "$NEXT_LINE" ]; then
+              # This is the last version, extract to end of file
+              CHANGELOG_CONTENT=$(tail -n +$((START_LINE + 1)) CHANGELOG.md)
+            else
+              # Extract between current and next version
+              CHANGELOG_CONTENT=$(sed -n "$((START_LINE + 1)),$((NEXT_LINE - 1))p" CHANGELOG.md)
+            fi
+
+            # Trim trailing whitespace and empty lines
+            CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
+
+            if [ -z "$CHANGELOG_CONTENT" ]; then
+              echo "WARNING: Extracted changelog is empty for version $VERSION"
+              echo "Release version $VERSION" > release_notes.md
+            else
+              echo "$CHANGELOG_CONTENT" > release_notes.md
+            fi
+          fi
+
+          echo "Changelog content:"
+          cat release_notes.md
+
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: documentation
+          path: docs-html
+
+      - name: Create documentation archive
+        run: |
+          cd docs-html
+          tar -czf ../documentation-${{ steps.get_version.outputs.version }}.tar.gz .
+          cd ..
+          echo "✓ Documentation archive created"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.version, '-') }}
+          files: |
+            documentation-${{ steps.get_version.outputs.version }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Version: ${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Tag: ${{ steps.get_version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Documentation: Built and attached" >> $GITHUB_STEP_SUMMARY
+          echo "✓ GitHub Release: Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changelog" >> $GITHUB_STEP_SUMMARY
+          cat release_notes.md >> $GITHUB_STEP_SUMMARY

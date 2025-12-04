@@ -539,12 +539,14 @@ For urgent bug fixes:
 
 ### Release Automation
 
-The project includes a GitHub Actions workflow (`.github/workflows/release.yml`) that automates parts of the release process:
+The project includes a GitHub Actions workflow (`.github/workflows/release.yml`) that automates the release process:
 
 - Triggers on version tag pushes (v*.*.*)
-- Runs full test suite
-- Builds documentation
-- Creates GitHub release with changelog
+- Validates version format and consistency
+- Runs full test suite on multiple Python versions
+- Builds Sphinx documentation
+- Extracts changelog entries for the version
+- Creates GitHub release with release notes and documentation archive
 
 To use the automated workflow:
 
@@ -555,6 +557,8 @@ git push origin v1.1.0
 ```
 
 The workflow will handle the rest automatically.
+
+For detailed information about the release workflow, testing, and troubleshooting, see [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md).
 
 ### Version History
 

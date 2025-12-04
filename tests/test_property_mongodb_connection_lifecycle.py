@@ -63,6 +63,11 @@ def valid_mongodb_config_strategy(draw):
     """
     # Use environment variables or defaults
     mongodb_url = os.getenv("DATABASE_URL", "mongodb://localhost:27017")
+
+    # Ensure URL has proper mongodb:// prefix
+    if not mongodb_url.startswith("mongodb://") and not mongodb_url.startswith("mongodb+srv://"):
+        mongodb_url = f"mongodb://{mongodb_url}"
+
     mongodb_database = os.getenv("MONGODB_DATABASE", "fastapi_crud_test")
     mongodb_timeout = draw(st.integers(min_value=1000, max_value=10000))
 
@@ -199,7 +204,7 @@ async def test_mongodb_connection_ready_after_init(config, monkeypatch):
 
 @pytest.mark.property
 @pytest.mark.asyncio
-async def test_mongodb_graceful_shutdown():
+async def test_mongodb_graceful_shutdown(monkeypatch):
     """
     Feature: mongodb-integration, Property 1: Backend initialization from configuration (MongoDB)
     Validates: Requirement 1.2
@@ -208,8 +213,17 @@ async def test_mongodb_graceful_shutdown():
     and multiple close calls should be safe (idempotent).
     """
     # Use default configuration
-    os.getenv("DATABASE_URL", "mongodb://localhost:27017")
-    os.getenv("MONGODB_DATABASE", "fastapi_crud_test")
+    mongodb_url = os.getenv("DATABASE_URL", "mongodb://localhost:27017")
+
+    # Ensure URL has proper mongodb:// prefix
+    if not mongodb_url.startswith("mongodb://") and not mongodb_url.startswith("mongodb+srv://"):
+        mongodb_url = f"mongodb://{mongodb_url}"
+
+    mongodb_database = os.getenv("MONGODB_DATABASE", "fastapi_crud_test")
+
+    # Set environment variables
+    monkeypatch.setenv("DATABASE_URL", mongodb_url)
+    monkeypatch.setenv("MONGODB_DATABASE", mongodb_database)
 
     # Force reload to ensure clean state
     import importlib

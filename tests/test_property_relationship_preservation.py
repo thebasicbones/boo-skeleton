@@ -310,7 +310,11 @@ async def test_mongodb_relationship_preservation(num_dependencies, seed):
 @pytest.mark.property
 @pytest.mark.asyncio
 @pytest.mark.skipif(not is_mongodb_available(), reason="MongoDB not available")
-@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(
+    max_examples=50,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    deadline=1000,  # Allow 1 second for database operations
+)
 @given(
     num_dependencies=st.integers(min_value=0, max_value=5),
     seed=st.integers(min_value=0, max_value=1000000),

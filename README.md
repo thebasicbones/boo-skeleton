@@ -1,16 +1,30 @@
 # FastAPI CRUD Backend
 
-A RESTful API backend with topological sorting capabilities for managing resources with dependencies. Supports both SQLite and MongoDB as database backends.
+<!-- Replace YOUR_USERNAME with your GitHub username and YOUR_REPO with your repository name -->
+[![CI](https://github.com/YOUR_USERNAME/fastapi-crud-backend/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/fastapi-crud-backend/actions/workflows/ci.yml)
+[![Lint](https://github.com/YOUR_USERNAME/fastapi-crud-backend/workflows/Lint/badge.svg)](https://github.com/YOUR_USERNAME/fastapi-crud-backend/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/gh/YOUR_USERNAME/fastapi-crud-backend/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/fastapi-crud-backend)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-sphinx-blue.svg)](docs/build/html/index.html)
 
-## Features
+A production-ready RESTful API backend with topological sorting capabilities for managing resources with dependencies. Features comprehensive DevOps tooling, dual database backend support, and extensive testing.
 
-- 🚀 RESTful API with FastAPI
-- 🔄 Topological sorting for dependency management
-- 💾 Dual database backend support (SQLite and MongoDB)
-- ✅ Comprehensive test suite with property-based testing
-- 📊 Automatic API documentation (Swagger/ReDoc)
-- 🔍 Resource search capabilities
-- 🔗 Cascade delete for dependent resources
+## ✨ Features
+
+- 🚀 **RESTful API** with FastAPI and automatic OpenAPI documentation
+- 🔄 **Topological sorting** for dependency management and ordering
+- 💾 **Dual database backend** support (SQLite and MongoDB)
+- ✅ **Comprehensive testing** with property-based testing using Hypothesis
+- 🔍 **Resource search** capabilities with dependency-aware results
+- 🔗 **Cascade delete** for dependent resources
+- 🛠️ **DevOps tooling** with pre-commit hooks, linting, and CI/CD
+- 📊 **Code coverage** tracking and reporting
+- 📚 **Auto-generated documentation** with Sphinx
+- 🔒 **Type safety** with MyPy static type checking
+- 🌍 **Multi-environment** configuration support
 
 ## Project Structure
 
@@ -33,37 +47,538 @@ A RESTful API backend with topological sorting capabilities for managing resourc
 └── venv/               # Virtual environment
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Create Virtual Environment
+Get up and running in under 5 minutes:
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/fastapi-crud-backend.git
+cd fastapi-crud-backend
+
+# 2. Create and activate virtual environment
 python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment (uses SQLite by default)
+cp .env.example .env
+
+# 5. Run the application
+python main.py
 ```
 
-### 2. Activate Virtual Environment
+**That's it!** 🎉 The API is now running at:
+- **API**: http://localhost:8000
+- **Interactive Docs**: http://localhost:8000/docs
+- **Alternative Docs**: http://localhost:8000/redoc
+
+### Quick Test
 
 ```bash
-source venv/bin/activate  # On macOS/Linux
-# or
-venv\Scripts\activate     # On Windows
+# Create a resource
+curl -X POST http://localhost:8000/api/resources \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My First Resource", "description": "Testing the API", "dependencies": []}'
+
+# List all resources
+curl http://localhost:8000/api/resources
 ```
 
-### 3. Install Dependencies
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+  - [For Users](#for-users)
+  - [For Developers](#for-developers)
+- [Development Tools](#-development-tools)
+  - [Code Quality](#code-quality)
+  - [Testing](#testing)
+  - [Documentation](#documentation)
+  - [CI/CD](#cicd)
+- [Database Configuration](#database-configuration)
+- [API Documentation](#api-endpoints)
+- [Testing Guide](#testing)
+- [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
+
+## 📦 Installation
+
+### For Users
+
+If you just want to use the API:
 
 ```bash
+# Clone and setup
+git clone https://github.com/YOUR_USERNAME/fastapi-crud-backend.git
+cd fastapi-crud-backend
+python3 -m venv venv
+source venv/bin/activate
+
+# Install production dependencies
+pip install -r requirements.txt
+
+# Configure and run
+cp .env.example .env
+python main.py
+```
+
+### For Developers
+
+If you're contributing or want the full development environment:
+
+```bash
+# Clone and setup
+git clone https://github.com/YOUR_USERNAME/fastapi-crud-backend.git
+cd fastapi-crud-backend
+python3 -m venv venv
+source venv/bin/activate
+
+# Install all dependencies (including dev tools)
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# Configure environment
+cp .env.example .env
+
+# Run tests to verify setup
+pytest
+
+# Start development server
+python main.py
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup and workflows.
+
+## 🛠️ Development Tools
+
+This project includes comprehensive DevOps tooling for maintaining code quality, automating testing, and streamlining development workflows.
+
+### Code Quality
+
+#### Black - Code Formatter
+
+Automatically formats Python code to maintain consistent style:
+
+```bash
+# Format all files
+black .
+
+# Check formatting without changes
+black --check .
+
+# Format specific file
+black app/services/my_service.py
+```
+
+**Configuration:** `pyproject.toml` (line length: 100, target: Python 3.11)
+
+#### Ruff - Fast Linter
+
+Lightning-fast Python linter that replaces Flake8, isort, and more:
+
+```bash
+# Lint all files
+ruff check .
+
+# Lint with auto-fix
+ruff check --fix .
+
+# Lint specific directory
+ruff check app/
+```
+
+**Configuration:** `pyproject.toml` (includes pycodestyle, pyflakes, isort, bugbear, comprehensions)
+
+#### MyPy - Type Checker
+
+Static type checker for Python type hints:
+
+```bash
+# Type check the app
+mypy app/
+
+# Type check with verbose output
+mypy --verbose app/
+
+# Type check specific file
+mypy app/services/resource_service.py
+```
+
+**Configuration:** `mypy.ini` (strict mode enabled for production code)
+
+#### Pre-commit Hooks
+
+Automated checks that run before each commit:
+
+```bash
+# Install hooks (one-time setup)
+pre-commit install
+
+# Run all hooks manually
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run black
+pre-commit run ruff
+pre-commit run mypy
+
+# Update hooks to latest versions
+pre-commit autoupdate
+```
+
+**What the hooks do:**
+- ✅ Format code with Black
+- ✅ Lint and auto-fix with Ruff
+- ✅ Type check with MyPy
+- ✅ Trim trailing whitespace
+- ✅ Fix end-of-file issues
+- ✅ Check YAML syntax
+- ✅ Prevent large files from being committed
+
+**Example workflow:**
+```bash
+# Make changes
+vim app/services/my_service.py
+
+# Stage changes
+git add app/services/my_service.py
+
+# Commit (hooks run automatically)
+git commit -m "feat: add new service"
+
+# If hooks fail, fix issues and commit again
+# Hooks will show exactly what needs to be fixed
+```
+
+### Testing
+
+#### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run specific test file
+pytest tests/test_resource_service.py
+
+# Run tests matching pattern
+pytest -k "crud"
+
+# Run with coverage
+pytest --cov=app --cov-report=html --cov-report=xml
+
+# View coverage report
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+```
+
+#### Test Categories
+
+```bash
+# Run only unit tests
+pytest tests/test_api_endpoints.py tests/test_resource_service.py -v
+
+# Run only property-based tests
+pytest tests/test_property_*.py -v
+
+# Run tests in parallel (faster)
+pytest -n auto  # requires pytest-xdist
+```
+
+#### Coverage Thresholds
+
+- **Minimum coverage:** 80%
+- **Configuration:** `.coveragerc`
+- **Reports:** HTML (`htmlcov/`) and XML (`coverage.xml`)
+
+### Documentation
+
+#### Building Documentation
+
+```bash
+# Build HTML documentation
+cd docs
+make html
+
+# View documentation
+open build/html/index.html  # macOS
+xdg-open build/html/index.html  # Linux
+
+# Clean previous builds
+make clean
+
+# Build with verbose output
+sphinx-build -v source build/html
+```
+
+#### Documentation Structure
+
+- **Sphinx** for documentation generation
+- **Read the Docs** theme for styling
+- **Autodoc** for API documentation from docstrings
+- **Napoleon** for Google-style docstrings
+
+#### Adding Documentation
+
+1. Add docstrings to your code:
+   ```python
+   def my_function(param: str) -> int:
+       """
+       Brief description of function.
+
+       Args:
+           param: Description of parameter
+
+       Returns:
+           Description of return value
+
+       Raises:
+           ValueError: When param is invalid
+       """
+       pass
+   ```
+
+2. Rebuild documentation:
+   ```bash
+   cd docs && make html
+   ```
+
+### CI/CD
+
+#### GitHub Actions Workflows
+
+**CI Workflow** (`.github/workflows/ci.yml`)
+- Runs on: Push to main/develop, Pull Requests
+- Tests: Python 3.10, 3.11, 3.12
+- Services: MongoDB for integration tests
+- Coverage: Uploads to Codecov
+
+**Lint Workflow** (`.github/workflows/lint.yml`)
+- Runs on: All pushes and PRs
+- Checks: Black, Ruff, MyPy
+- Fast feedback on code quality
+
+**Release Workflow** (`.github/workflows/release.yml`)
+- Triggers on: Version tags (v*.*.*)
+- Actions: Build docs, create GitHub release
+- Artifacts: Documentation archive
+
+#### Running CI Locally
+
+```bash
+# Install act (GitHub Actions local runner)
+brew install act  # macOS
+# or download from https://github.com/nektos/act
+
+# Run CI workflow locally
+act -j test
+
+# Run lint workflow locally
+act -j lint
+```
+
+#### CI Status Checks
+
+All PRs must pass:
+- ✅ All tests (Python 3.10, 3.11, 3.12)
+- ✅ Code formatting (Black)
+- ✅ Linting (Ruff)
+- ✅ Type checking (MyPy)
+- ✅ Coverage threshold (80%)
+
+### Dependency Management
+
+#### Structure
+
+- `requirements.in` - Unpinned production dependencies
+- `requirements.txt` - Pinned production dependencies (generated)
+- `requirements-dev.in` - Unpinned dev dependencies
+- `requirements-dev.txt` - Pinned dev dependencies (generated)
+
+#### Adding Dependencies
+
+```bash
+# Add to requirements.in (production)
+echo "new-package" >> requirements.in
+
+# Compile and install
+pip-compile requirements.in
+pip install -r requirements.txt
+
+# Add to requirements-dev.in (development)
+echo "new-dev-package" >> requirements-dev.in
+
+# Compile and install
+pip-compile requirements-dev.in
+pip install -r requirements-dev.txt
+```
+
+#### Updating Dependencies
+
+```bash
+# Update all dependencies
+pip-compile --upgrade requirements.in
+pip-compile --upgrade requirements-dev.in
+
+# Update specific package
+pip-compile --upgrade-package fastapi requirements.in
+
+# Install updates
+pip install -r requirements.txt -r requirements-dev.txt
+
+# Run tests to verify
+pytest
+```
+
+#### Security Scanning
+
+```bash
+# Check for vulnerabilities
+safety check
+
+# Check requirements file
+safety check -r requirements.txt
+
+# Detailed report
+safety check --full-report
+```
+
+#### Automated Updates
+
+**Dependabot** automatically creates PRs for:
+- Weekly dependency updates
+- Security vulnerability patches
+- Grouped patch updates to reduce noise
+
+### Environment Configuration
+
+#### Environment Files
+
+- `.env.development` - Local development settings
+- `.env.staging` - Staging environment settings
+- `.env.production.example` - Production template (not committed)
+- `.env` - Active environment (gitignored)
+
+#### Switching Environments
+
+```bash
+# Development
+cp .env.development .env
+python main.py
+
+# Staging
+cp .env.staging .env
+python main.py
+
+# Production (create from example first)
+cp .env.production.example .env.production
+# Edit .env.production with production values
+cp .env.production .env
+python main.py
+```
+
+#### Environment Variables
+
+Key variables:
+- `ENVIRONMENT` - development/staging/production
+- `DATABASE_TYPE` - sqlite/mongodb
+- `DATABASE_URL` - Database connection string
+- `LOG_LEVEL` - DEBUG/INFO/WARNING/ERROR
+- `API_HOST` - API host (default: 0.0.0.0)
+- `API_PORT` - API port (default: 8000)
+
+See `config/settings.py` for full configuration schema.
+
+### Versioning and Releases
+
+#### Version Management
+
+- **Current version:** `VERSION` file (currently 1.0.0)
+- **Format:** Semantic versioning (MAJOR.MINOR.PATCH)
+- **Changelog:** `CHANGELOG.md` (Keep a Changelog format)
+
+#### Creating a Release
+
+```bash
+# 1. Update VERSION file
+echo "1.1.0" > VERSION
+
+# 2. Update CHANGELOG.md
+# Move [Unreleased] entries to [1.1.0] section
+
+# 3. Commit changes
+git add VERSION CHANGELOG.md
+git commit -m "chore: release version 1.1.0"
+
+# 4. Create and push tag
+git tag -a v1.1.0 -m "Release version 1.1.0"
+git push origin main
+git push origin v1.1.0
+
+# 5. GitHub Actions automatically creates release
+```
+
+See [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) for detailed release procedures.
+
+### Quick Reference
+
+#### Daily Development Commands
+
+```bash
+# Start development
+source venv/bin/activate
+python main.py
+
+# Before committing
+black .
+ruff check --fix .
+mypy app/
+pytest
+
+# Or let pre-commit handle it
+git add .
+git commit -m "your message"  # Hooks run automatically
+
+# Run tests with coverage
+pytest --cov=app --cov-report=html
+
+# Update dependencies
+pip-compile --upgrade requirements.in
 pip install -r requirements.txt
 ```
 
-### 4. Configure Database Backend
-
-Copy the example environment file and configure your database:
+#### Troubleshooting Commands
 
 ```bash
-cp .env.example .env
-```
+# Fix formatting issues
+black .
 
-Edit `.env` to choose your database backend (see [Database Configuration](#database-configuration) below).
+# Fix linting issues
+ruff check --fix .
+
+# Clear test cache
+pytest --cache-clear
+
+# Reinstall pre-commit hooks
+pre-commit uninstall
+pre-commit install
+
+# Update pre-commit hooks
+pre-commit autoupdate
+
+# Check for security issues
+safety check
+```
 
 ## Development Setup
 
