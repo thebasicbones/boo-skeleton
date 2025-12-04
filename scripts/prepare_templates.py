@@ -59,7 +59,7 @@ def main():
         "VERSION",
     ]
 
-    print(f"Copying source files from src/ to fastapi_crud_cli/source/...")
+    print("Copying source files from src/ to fastapi_crud_cli/source/...")
     copied_count = 0
     skipped_count = 0
 
@@ -80,7 +80,7 @@ def main():
         print(f"  ✓ Copied: {item}")
         copied_count += 1
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Copied: {copied_count} files")
     print(f"  Skipped: {skipped_count} files")
     print(f"\nTemplate source files are ready in: {dest_root}")

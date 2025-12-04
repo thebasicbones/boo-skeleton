@@ -125,9 +125,6 @@ def list() -> None:
     from rich.table import Table
 
     from .database_configs import DATABASE_CONFIGS
-    from .output import OutputFormatter
-
-    output = OutputFormatter(console)
 
     # Create table for database options
     table = Table(

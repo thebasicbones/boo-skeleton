@@ -96,7 +96,7 @@ class ProjectPrompts:
 
         # Display available database options
         self.console.print("[dim]Available database backends:[/dim]")
-        for i, (db_type, config) in enumerate(DATABASE_CONFIGS.items(), 1):
+        for i, (_db_type, config) in enumerate(DATABASE_CONFIGS.items(), 1):
             self.console.print(
                 f"  [cyan]{i}.[/cyan] [bold]{config.name}[/bold] - {config.description}"
             )

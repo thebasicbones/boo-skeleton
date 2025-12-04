@@ -1,6 +1,8 @@
 """Tests for TopologicalSortService"""
 
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from app.services.topological_sort_service import CircularDependencyError, TopologicalSortService
 
@@ -234,9 +236,6 @@ class TestValidateNoCycles:
 
 
 # Property-Based Tests
-
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 
 def generate_dag(

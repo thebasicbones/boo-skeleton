@@ -49,7 +49,7 @@ class ProjectGenerator:
             output_dir.mkdir(parents=True, exist_ok=True)
 
             # Create directory structure
-            created_dirs = self.create_directory_structure(output_dir, config)
+            self.create_directory_structure(output_dir, config)
 
             # Generate source files
             source_files = self.generate_source_files(output_dir, config)
@@ -357,7 +357,6 @@ class ProjectGenerator:
         """
         import subprocess
         import sys
-        from pathlib import Path
 
         try:
             venv_path = project_dir / "venv"
