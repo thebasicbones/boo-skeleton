@@ -146,6 +146,9 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--ignore=src",
+    "--ignore=fastapi_crud_cli/source",
+    "--ignore=fastapi_crud_cli/templates",
 ]
 markers = [
     "property: Property-based tests using Hypothesis",
