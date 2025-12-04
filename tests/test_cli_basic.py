@@ -1,7 +1,7 @@
 """Basic tests for the CLI tool."""
 
-import pytest
 from click.testing import CliRunner
+
 from fastapi_crud_cli.cli.main import cli
 
 
