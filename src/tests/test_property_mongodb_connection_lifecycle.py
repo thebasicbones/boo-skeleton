@@ -6,6 +6,7 @@ Validates: Requirements 1.2
 This test verifies that the MongoDB backend can be successfully initialized
 from valid configuration and establishes a working connection.
 """
+
 import os
 
 import pytest

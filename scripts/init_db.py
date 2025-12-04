@@ -1,4 +1,5 @@
 """Database initialization script"""
+
 import asyncio
 import os
 import sys

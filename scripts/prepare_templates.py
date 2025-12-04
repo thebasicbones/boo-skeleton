@@ -15,19 +15,19 @@ def main():
     # Get project root
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
-    
+
     # Define source and destination
     source_root = project_root / "src"
     dest_root = project_root / "fastapi_crud_cli" / "source"
-    
+
     if not source_root.exists():
         print(f"Error: Source directory not found: {source_root}")
         print("Please ensure the project structure has a 'src/' directory.")
         return
-    
+
     # Create destination directory
     dest_root.mkdir(parents=True, exist_ok=True)
-    
+
     # Files and directories to copy
     items_to_copy = [
         # App directory
@@ -46,43 +46,40 @@ def main():
         "app/services/topological_sort_service.py",
         "app/routers/__init__.py",
         "app/routers/resources.py",
-        
         # Config directory
         "config/__init__.py",
-        
         # Tests directory
         "tests/__init__.py",
         "tests/conftest.py",
         "tests/test_api_endpoints.py",
-        
         # Root files
         ".coveragerc",
         "pytest.ini",
         ".gitignore",
         "VERSION",
     ]
-    
+
     print(f"Copying source files from src/ to fastapi_crud_cli/source/...")
     copied_count = 0
     skipped_count = 0
-    
+
     for item in items_to_copy:
         source_path = source_root / item
         dest_path = dest_root / item
-        
+
         if not source_path.exists():
             print(f"  ⚠ Skipped (not found): {item}")
             skipped_count += 1
             continue
-        
+
         # Create parent directory
         dest_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Copy file
         shutil.copy2(source_path, dest_path)
         print(f"  ✓ Copied: {item}")
         copied_count += 1
-    
+
     print(f"\nSummary:")
     print(f"  Copied: {copied_count} files")
     print(f"  Skipped: {skipped_count} files")

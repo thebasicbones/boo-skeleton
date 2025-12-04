@@ -6,6 +6,7 @@ Validates: Requirements 1.2, 6.1, 6.2, 6.3
 For any invalid resource data (missing required fields, wrong types, invalid dependencies),
 the API should reject the request with an HTTP 422 status code and detailed validation error.
 """
+
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st

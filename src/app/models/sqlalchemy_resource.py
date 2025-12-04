@@ -1,4 +1,5 @@
 """SQLAlchemy models for Resource and ResourceDependency"""
+
 from datetime import UTC, datetime
 from uuid import uuid4
 

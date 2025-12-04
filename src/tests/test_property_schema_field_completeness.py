@@ -7,6 +7,7 @@ This test verifies that resources stored in MongoDB contain all required fields
 (id, name, description, dependencies, created_at, updated_at) with appropriate
 data types.
 """
+
 import os
 from datetime import datetime
 

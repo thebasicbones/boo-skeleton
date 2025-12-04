@@ -1,6 +1,7 @@
 """
 Populate the database with course structure examples showing multiple DAGs
 """
+
 import asyncio
 
 import httpx

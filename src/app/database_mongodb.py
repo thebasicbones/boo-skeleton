@@ -1,4 +1,5 @@
 """MongoDB database connection and client management"""
+
 import logging
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -60,7 +61,7 @@ async def get_mongodb_db() -> AsyncIOMotorDatabase:
         raise DatabaseError(
             f"Failed to access MongoDB database: {MONGODB_DATABASE}",
             error_type="connection",
-            details=str(e)
+            details=str(e),
         )
 
 
@@ -113,9 +114,7 @@ async def init_mongodb() -> None:
         error_msg = f"Failed to connect to MongoDB at {MONGODB_URL}: {str(e)}"
         logger.error(error_msg)
         raise DatabaseError(
-            error_msg,
-            error_type="connection",
-            details=f"Connection timeout: {MONGODB_TIMEOUT}ms"
+            error_msg, error_type="connection", details=f"Connection timeout: {MONGODB_TIMEOUT}ms"
         )
     except Exception as e:
         error_msg = f"Unexpected error during MongoDB initialization: {str(e)}"

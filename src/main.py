@@ -4,6 +4,7 @@ FastAPI CRUD Backend Application Entry Point
 This module initializes the FastAPI application with all necessary
 configurations, middleware, routers, and error handlers.
 """
+
 import logging
 import sys
 from contextlib import asynccontextmanager

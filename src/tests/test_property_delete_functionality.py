@@ -7,6 +7,7 @@ This module tests that the frontend correctly handles delete operations:
 - Resources are removed from the UI after successful deletion
 - Delete operations properly update the displayed resource list
 """
+
 import os
 
 import pytest

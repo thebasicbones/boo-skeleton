@@ -89,7 +89,7 @@ database backends and development configurations.[/dim]
         for key, value in config.items():
             # Format key as human-readable
             display_key = key.replace("_", " ").title()
-            
+
             # Format value based on type
             if isinstance(value, bool):
                 display_value = "✓ Yes" if value else "✗ No"
@@ -101,7 +101,7 @@ database backends and development configurations.[/dim]
                 display_value = "[dim]Not specified[/dim]"
             else:
                 display_value = str(value)
-            
+
             table.add_row(display_key, display_value)
 
         self.console.print()
@@ -150,18 +150,16 @@ database backends and development configurations.[/dim]
             # Create intermediate directories
             for i, part in enumerate(parts[:-1]):
                 current_base = current_base / part if current_base else Path(part)
-                
+
                 if current_base not in dir_nodes:
                     parent_path = current_base.parent
                     parent_node = dir_nodes.get(parent_path, tree)
-                    dir_nodes[current_base] = parent_node.add(
-                        f"[bold blue]{part}/[/bold blue]"
-                    )
+                    dir_nodes[current_base] = parent_node.add(f"[bold blue]{part}/[/bold blue]")
 
             # Add file
             parent_path = file_path.parent
             parent_node = dir_nodes.get(parent_path, tree)
-            
+
             # Style based on file type
             filename = parts[-1] if parts else str(file_path)
             if filename.startswith("."):
@@ -174,7 +172,7 @@ database backends and development configurations.[/dim]
                 style = "cyan"
             else:
                 style = "white"
-            
+
             parent_node.add(f"[{style}]{filename}[/{style}]")
 
         self.console.print()

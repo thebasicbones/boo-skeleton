@@ -10,6 +10,7 @@ This module tests that the frontend correctly handles update operations:
 - Update form submissions send proper PUT requests to the API
 - Dependency modifications are correctly handled in updates
 """
+
 import os
 
 import pytest

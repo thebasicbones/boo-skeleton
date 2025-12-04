@@ -1,4 +1,5 @@
 """Database factory for backend selection and initialization"""
+
 import logging
 from collections.abc import AsyncGenerator
 
@@ -155,9 +156,7 @@ async def init_database() -> None:
     except Exception as e:
         logger.error(f"Failed to initialize {db_type} database: {e}", exc_info=True)
         raise DatabaseError(
-            f"Database initialization failed for {db_type}",
-            error_type="connection",
-            details=str(e)
+            f"Database initialization failed for {db_type}", error_type="connection", details=str(e)
         )
 
 

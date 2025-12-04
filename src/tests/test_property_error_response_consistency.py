@@ -6,6 +6,7 @@ Validates: Requirements 7.4
 For any error response across all endpoints, the response should follow
 the same JSON structure with consistent fields (error, message, details).
 """
+
 import pytest
 from httpx import AsyncClient
 from hypothesis import given, settings

@@ -6,6 +6,7 @@ Validates: Requirements 9.3
 This module tests that the frontend correctly displays error messages
 when the API returns errors (validation errors, not found errors, etc.).
 """
+
 import os
 
 import pytest

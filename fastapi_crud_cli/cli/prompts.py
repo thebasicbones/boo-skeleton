@@ -138,7 +138,9 @@ class ProjectPrompts:
         user_config: dict[str, Any] = {}
 
         self.console.print()
-        self.console.print("[dim]Configure your database connection (these will be saved to .env)[/dim]")
+        self.console.print(
+            "[dim]Configure your database connection (these will be saved to .env)[/dim]"
+        )
         self.console.print()
 
         for prompt_spec in prompts:

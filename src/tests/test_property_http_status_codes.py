@@ -6,6 +6,7 @@ Feature: fastapi-crud-backend, Property 8: Successful delete returns 204
 Feature: fastapi-crud-backend, Property 10: Successful search returns 200
 Validates: Requirements 1.4, 3.4, 4.3, 5.5
 """
+
 import pytest
 from httpx import AsyncClient
 from hypothesis import given, settings
