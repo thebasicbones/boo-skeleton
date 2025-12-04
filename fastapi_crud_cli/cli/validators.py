@@ -8,7 +8,6 @@ and email formats.
 
 import re
 from pathlib import Path
-from typing import Tuple
 from urllib.parse import urlparse
 
 
@@ -16,7 +15,7 @@ class ProjectValidator:
     """Validator class for project configuration inputs."""
 
     @staticmethod
-    def validate_project_name(name: str) -> Tuple[bool, str]:
+    def validate_project_name(name: str) -> tuple[bool, str]:
         """
         Validate project name format.
 
@@ -52,7 +51,7 @@ class ProjectValidator:
         return True, ""
 
     @staticmethod
-    def validate_directory_available(path: Path) -> Tuple[bool, str]:
+    def validate_directory_available(path: Path) -> tuple[bool, str]:
         """
         Check if directory is available for project creation.
 
@@ -99,7 +98,7 @@ class ProjectValidator:
         return True, ""
 
     @staticmethod
-    def validate_mongodb_url(url: str) -> Tuple[bool, str]:
+    def validate_mongodb_url(url: str) -> tuple[bool, str]:
         """
         Validate MongoDB connection string format.
 
@@ -163,7 +162,7 @@ class ProjectValidator:
             return False, f"Invalid MongoDB URL format: {str(e)}"
 
     @staticmethod
-    def validate_postgres_config(config: dict) -> Tuple[bool, str]:
+    def validate_postgres_config(config: dict) -> tuple[bool, str]:
         """
         Validate PostgreSQL configuration parameters.
 
@@ -234,7 +233,7 @@ class ProjectValidator:
         return True, ""
 
     @staticmethod
-    def validate_email(email: str) -> Tuple[bool, str]:
+    def validate_email(email: str) -> tuple[bool, str]:
         """
         Validate email format using basic RFC 5322 rules.
 

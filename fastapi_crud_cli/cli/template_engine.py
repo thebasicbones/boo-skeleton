@@ -2,7 +2,6 @@
 Template engine for rendering project files
 """
 
-import os
 import shutil
 from pathlib import Path
 from typing import Any
@@ -39,7 +38,7 @@ class TemplateEngine:
         # Load manifest from the main template directory
         manifest_path = template_dir / "template_manifest.yaml"
         if manifest_path.exists():
-            with open(manifest_path, "r") as f:
+            with open(manifest_path) as f:
                 self.manifest = yaml.safe_load(f)
         else:
             self.manifest = {"static_files": [], "template_files": [], "empty_files": []}

@@ -183,9 +183,9 @@ def register_exception_handlers(app):
         )
 
     @app.exception_handler(SQLAlchemyError)
-    async def database_error_handler(request: Request, exc: SQLAlchemyError):
+    async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
         """
-        Handle database errors.
+        Handle SQLAlchemy database errors.
         Returns HTTP 500 without exposing sensitive database details.
         """
         logger.error(

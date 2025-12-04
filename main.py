@@ -14,7 +14,7 @@ src_dir = Path(__file__).parent / "src"
 sys.path.insert(0, str(src_dir))
 
 # Import and run the application
-from main import app, main as run_app
+from main import main as run_app  # noqa: E402
 
 if __name__ == "__main__":
     run_app()

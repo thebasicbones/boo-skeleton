@@ -148,7 +148,7 @@ database backends and development configurations.[/dim]
             current_base = base_dir
 
             # Create intermediate directories
-            for i, part in enumerate(parts[:-1]):
+            for _i, part in enumerate(parts[:-1]):
                 current_base = current_base / part if current_base else Path(part)
 
                 if current_base not in dir_nodes:
