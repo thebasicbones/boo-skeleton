@@ -76,8 +76,8 @@
   - **Property 12: Trace context propagation**
   - **Validates: Requirements 8.6**
 
-- [ ] 5. Implement structured logging with trace correlation
-- [ ] 5.1 Create logging module with StructuredLogger class
+- [-] 5. Implement structured logging with trace correlation
+- [-] 5.1 Create logging module with StructuredLogger class
   - Configure JSON formatter for structured logs
   - Implement methods for logging operation start/complete
   - Implement trace context injection into log records

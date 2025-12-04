@@ -26,6 +26,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from .config import ObservabilitySettings
 from .metrics import MetricsInstrumentor, create_metrics_instrumentor
+from .logging import StructuredLogger, get_logger as get_structured_logger
 
 logger = logging.getLogger(__name__)
 
@@ -273,4 +274,6 @@ __all__ = [
     "ObservabilitySettings",
     "MetricsInstrumentor",
     "create_metrics_instrumentor",
+    "StructuredLogger",
+    "get_structured_logger",
 ]
