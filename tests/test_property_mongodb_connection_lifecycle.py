@@ -12,7 +12,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from app.exceptions import DatabaseConnectionError
+from app.exceptions import DatabaseError
 
 
 # Check if MongoDB is available
@@ -137,7 +137,7 @@ async def test_mongodb_initialization_from_configuration(config, monkeypatch):
 
         # Verify connection is closed
         # After closing, attempting to get client should raise an error
-        with pytest.raises(DatabaseConnectionError):
+        with pytest.raises(DatabaseError):
             app.database_mongodb.get_mongodb_client()
 
 
@@ -229,7 +229,7 @@ async def test_mongodb_graceful_shutdown():
     await app.database_mongodb.close_mongodb()
 
     # Verify client is None after close
-    with pytest.raises(DatabaseConnectionError):
+    with pytest.raises(DatabaseError):
         app.database_mongodb.get_mongodb_client()
 
     # Calling close again should be safe (idempotent)

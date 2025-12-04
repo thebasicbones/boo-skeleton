@@ -8,10 +8,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.exceptions import (
     CircularDependencyError,
-    DatabaseConnectionError,
-    DatabaseTimeoutError,
-    DuplicateResourceError,
-    ResourceNotFoundError,
+    DatabaseError,
+    NotFoundError,
     ValidationError,
 )
 
@@ -27,10 +25,10 @@ def register_exception_handlers(app):
         app: FastAPI application instance
     """
 
-    @app.exception_handler(ResourceNotFoundError)
-    async def resource_not_found_handler(request: Request, exc: ResourceNotFoundError):
+    @app.exception_handler(NotFoundError)
+    async def not_found_handler(request: Request, exc: NotFoundError):
         """
-        Handle ResourceNotFoundError exceptions.
+        Handle NotFoundError exceptions.
         Returns HTTP 404 with consistent error format.
         """
         logger.warning(
@@ -83,73 +81,55 @@ def register_exception_handlers(app):
             },
         )
 
-    @app.exception_handler(DatabaseConnectionError)
-    async def database_connection_error_handler(request: Request, exc: DatabaseConnectionError):
+    @app.exception_handler(DatabaseError)
+    async def database_error_handler(request: Request, exc: DatabaseError):
         """
-        Handle DatabaseConnectionError exceptions.
-        Returns HTTP 503 with consistent error format.
+        Handle DatabaseError exceptions with different error types.
+        Maps error_type to appropriate HTTP status codes:
+        - connection: HTTP 503
+        - timeout: HTTP 503
+        - duplicate: HTTP 409
+        - general: HTTP 500
         """
-        logger.error(
-            f"Database connection error: {exc.message} - Path: {request.url.path}",
-            extra={"error_message": exc.message, "details": exc.details, "path": request.url.path},
-        )
+        # Determine status code based on error type
+        if exc.error_type in ("connection", "timeout"):
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            log_level = "error"
+        elif exc.error_type == "duplicate":
+            status_code = status.HTTP_409_CONFLICT
+            log_level = "warning"
+        else:  # general or unknown
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            log_level = "error"
+
+        # Log with appropriate level
+        log_message = f"Database error ({exc.error_type}): {exc.message} - Path: {request.url.path}"
+        if log_level == "error":
+            logger.error(
+                log_message,
+                extra={"error_type": exc.error_type, "message": exc.message, "details": exc.details, "path": request.url.path},
+            )
+        else:
+            logger.warning(
+                log_message,
+                extra={"error_type": exc.error_type, "message": exc.message, "details": exc.details, "path": request.url.path},
+            )
+
+        # Map error_type to legacy error names for backward compatibility
+        error_name_map = {
+            "connection": "DatabaseConnectionError",
+            "timeout": "DatabaseTimeoutError",
+            "duplicate": "DuplicateResourceError",
+            "general": "DatabaseError",
+        }
+        error_name = error_name_map.get(exc.error_type, "DatabaseError")
 
         return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=status_code,
             content={
-                "error": "DatabaseConnectionError",
+                "error": error_name,
                 "message": exc.message,
                 "details": {"info": exc.details} if exc.details else {},
-            },
-        )
-
-    @app.exception_handler(DatabaseTimeoutError)
-    async def database_timeout_error_handler(request: Request, exc: DatabaseTimeoutError):
-        """
-        Handle DatabaseTimeoutError exceptions.
-        Returns HTTP 503 with consistent error format.
-        """
-        logger.error(
-            f"Database timeout error: {exc.message} - Path: {request.url.path}",
-            extra={
-                "error_message": exc.message,
-                "operation": exc.operation,
-                "path": request.url.path,
-            },
-        )
-
-        return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={
-                "error": "DatabaseTimeoutError",
-                "message": exc.message,
-                "details": {"operation": exc.operation} if exc.operation else {},
-            },
-        )
-
-    @app.exception_handler(DuplicateResourceError)
-    async def duplicate_resource_error_handler(request: Request, exc: DuplicateResourceError):
-        """
-        Handle DuplicateResourceError exceptions.
-        Returns HTTP 409 with consistent error format.
-        """
-        logger.warning(
-            f"Duplicate resource error: {exc.resource_id} - Path: {request.url.path}",
-            extra={
-                "resource_id": exc.resource_id,
-                "details": exc.details,
-                "path": request.url.path,
-            },
-        )
-
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={
-                "error": "DuplicateResourceError",
-                "message": str(exc),
-                "details": {"resource_id": exc.resource_id, "info": exc.details}
-                if exc.details
-                else {"resource_id": exc.resource_id},
             },
         )
 

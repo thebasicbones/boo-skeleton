@@ -16,7 +16,7 @@ from hypothesis import strategies as st
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
-from app.exceptions import DatabaseConnectionError
+from app.exceptions import DatabaseError
 from app.repositories.mongodb_resource_repository import MongoDBResourceRepository
 from app.schemas import ResourceCreate, ResourceUpdate
 from main import app
@@ -103,11 +103,11 @@ async def test_create_operation_connection_error_handling(resource_data, connect
     Validates: Requirement 6.1
 
     For any MongoDB create operation that fails due to connection issues,
-    the application should raise DatabaseConnectionError with appropriate details.
+    the application should raise DatabaseError with appropriate details.
 
     This property verifies:
     1. Connection errors are caught during create operations
-    2. DatabaseConnectionError is raised with descriptive message
+    2. DatabaseError is raised with descriptive message
     3. Original error details are preserved
     """
     # Create a mock database
@@ -122,7 +122,7 @@ async def test_create_operation_connection_error_handling(resource_data, connect
     repository = MongoDBResourceRepository(mock_db)
 
     # Attempt to create resource and verify error handling
-    with pytest.raises(DatabaseConnectionError) as exc_info:
+    with pytest.raises(DatabaseError) as exc_info:
         await repository.create(resource_data)
 
     # Verify the exception contains appropriate information
@@ -141,7 +141,7 @@ async def test_get_by_id_operation_connection_error_handling(resource_id, connec
     Validates: Requirement 6.1
 
     For any MongoDB get_by_id operation that fails due to connection issues,
-    the application should raise DatabaseConnectionError with appropriate details.
+    the application should raise DatabaseError with appropriate details.
     """
     # Create a mock database
     mock_db = AsyncMock(spec=AsyncIOMotorDatabase)
@@ -155,7 +155,7 @@ async def test_get_by_id_operation_connection_error_handling(resource_id, connec
     repository = MongoDBResourceRepository(mock_db)
 
     # Attempt to get resource and verify error handling
-    with pytest.raises(DatabaseConnectionError) as exc_info:
+    with pytest.raises(DatabaseError) as exc_info:
         await repository.get_by_id(resource_id)
 
     # Verify the exception contains appropriate information
@@ -173,7 +173,7 @@ async def test_get_all_operation_connection_error_handling(connection_error):
     Validates: Requirement 6.1
 
     For any MongoDB get_all operation that fails due to connection issues,
-    the application should raise DatabaseConnectionError with appropriate details.
+    the application should raise DatabaseError with appropriate details.
     """
     # Create a mock database
     mock_db = AsyncMock(spec=AsyncIOMotorDatabase)
@@ -189,7 +189,7 @@ async def test_get_all_operation_connection_error_handling(connection_error):
     repository = MongoDBResourceRepository(mock_db)
 
     # Attempt to get all resources and verify error handling
-    with pytest.raises(DatabaseConnectionError) as exc_info:
+    with pytest.raises(DatabaseError) as exc_info:
         await repository.get_all()
 
     # Verify the exception contains appropriate information
@@ -213,7 +213,7 @@ async def test_update_operation_connection_error_handling(
     Validates: Requirement 6.1
 
     For any MongoDB update operation that fails due to connection issues,
-    the application should raise DatabaseConnectionError with appropriate details.
+    the application should raise DatabaseError with appropriate details.
     """
     from datetime import datetime
 
@@ -248,7 +248,7 @@ async def test_update_operation_connection_error_handling(
     repository = MongoDBResourceRepository(mock_db)
 
     # Attempt to update resource and verify error handling
-    with pytest.raises(DatabaseConnectionError) as exc_info:
+    with pytest.raises(DatabaseError) as exc_info:
         await repository.update(resource_id, update_data)
 
     # Verify the exception contains appropriate information
@@ -265,7 +265,7 @@ async def test_delete_operation_connection_error_handling(resource_id, connectio
     Validates: Requirement 6.1
 
     For any MongoDB delete operation that fails due to connection issues,
-    the application should raise DatabaseConnectionError with appropriate details.
+    the application should raise DatabaseError with appropriate details.
     """
     from datetime import datetime
 
@@ -293,7 +293,7 @@ async def test_delete_operation_connection_error_handling(resource_id, connectio
     repository = MongoDBResourceRepository(mock_db)
 
     # Attempt to delete resource and verify error handling
-    with pytest.raises(DatabaseConnectionError) as exc_info:
+    with pytest.raises(DatabaseError) as exc_info:
         await repository.delete(resource_id, cascade=False)
 
     # Verify the exception contains appropriate information
@@ -313,7 +313,7 @@ async def test_search_operation_connection_error_handling(query, connection_erro
     Validates: Requirement 6.1
 
     For any MongoDB search operation that fails due to connection issues,
-    the application should raise DatabaseConnectionError with appropriate details.
+    the application should raise DatabaseError with appropriate details.
     """
     # Create a mock database
     mock_db = AsyncMock(spec=AsyncIOMotorDatabase)
@@ -329,7 +329,7 @@ async def test_search_operation_connection_error_handling(query, connection_erro
     repository = MongoDBResourceRepository(mock_db)
 
     # Attempt to search and verify error handling
-    with pytest.raises(DatabaseConnectionError) as exc_info:
+    with pytest.raises(DatabaseError) as exc_info:
         await repository.search(query)
 
     # Verify the exception contains appropriate information
@@ -357,8 +357,10 @@ async def test_api_returns_503_on_connection_error():
         # Create a mock repository that raises connection error
         mock_repo = AsyncMock()
         mock_repo.get_all = AsyncMock(
-            side_effect=DatabaseConnectionError(
-                "Failed to retrieve resources due to connection error", details="Connection lost"
+            side_effect=DatabaseError(
+                "Failed to retrieve resources due to connection error",
+                error_type="connection",
+                details="Connection lost"
             )
         )
         mock_get_repo.return_value = mock_repo
@@ -373,6 +375,6 @@ async def test_api_returns_503_on_connection_error():
         # Verify error response structure
         error_data = response.json()
         assert "error" in error_data
-        assert error_data["error"] == "DatabaseConnectionError"
+        assert error_data["error"] == "DatabaseError"
         assert "message" in error_data
         assert "connection" in error_data["message"].lower()

@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database_factory import get_repository
-from app.exceptions import CircularDependencyError, ResourceNotFoundError, ValidationError
+from app.exceptions import CircularDependencyError, NotFoundError, ValidationError
 from app.schemas import ResourceCreate, ResourceResponse, ResourceUpdate
 from app.services.topological_sort_service import TopologicalSortService
 
@@ -37,29 +37,9 @@ class ResourceService:
         Raises:
             ValidationError: If dependencies are invalid or would create a cycle
         """
-        # Validate that all dependency IDs exist
-        if data.dependencies:
-            await self._validate_dependencies_exist(data.dependencies)
-
-        # Get all existing resources to validate no cycles
-        existing_resources = await self.repository.get_all()
-
-        # Convert to dict format for topological sort validation
-        resource_dicts = [
-            {"id": self._get_resource_id(r), "dependencies": self._get_resource_dependencies(r)}
-            for r in existing_resources
-        ]
-
-        # Generate a temporary ID for validation (will be replaced by actual UUID)
+        # Validate dependencies and check cycles
         temp_id = "temp_new_resource_id"
-
-        # Validate that adding this resource won't create a cycle
-        try:
-            self.topo_service.validate_no_cycles(resource_dicts, temp_id, data.dependencies)
-        except CircularDependencyError as e:
-            raise ValidationError(
-                "Cannot create resource: would create circular dependency", {"cycle": str(e)}
-            )
+        await self._validate_and_check_cycles(temp_id, data.dependencies)
 
         # Create the resource
         resource = await self.repository.create(data)
@@ -77,12 +57,12 @@ class ResourceService:
             ResourceResponse with the resource data
 
         Raises:
-            ResourceNotFoundError: If resource doesn't exist
+            NotFoundError: If resource doesn't exist
         """
         resource = await self.repository.get_by_id(resource_id)
 
         if not resource:
-            raise ResourceNotFoundError(resource_id)
+            raise NotFoundError(resource_id)
 
         return self._resource_to_response(resource)
 
@@ -108,34 +88,17 @@ class ResourceService:
             ResourceResponse with the updated resource
 
         Raises:
-            ResourceNotFoundError: If resource doesn't exist
+            NotFoundError: If resource doesn't exist
             ValidationError: If dependencies are invalid or would create a cycle
         """
         # Check if resource exists
         existing_resource = await self.repository.get_by_id(resource_id)
         if not existing_resource:
-            raise ResourceNotFoundError(resource_id)
+            raise NotFoundError(resource_id)
 
-        # Validate that all dependency IDs exist (if dependencies are being updated)
+        # Validate dependencies if being updated
         if data.dependencies is not None:
-            await self._validate_dependencies_exist(data.dependencies)
-
-            # Get all existing resources to validate no cycles
-            all_resources = await self.repository.get_all()
-
-            # Convert to dict format for topological sort validation
-            resource_dicts = [
-                {"id": self._get_resource_id(r), "dependencies": self._get_resource_dependencies(r)}
-                for r in all_resources
-            ]
-
-            # Validate that updating this resource won't create a cycle
-            try:
-                self.topo_service.validate_no_cycles(resource_dicts, resource_id, data.dependencies)
-            except CircularDependencyError as e:
-                raise ValidationError(
-                    "Cannot update resource: would create circular dependency", {"cycle": str(e)}
-                )
+            await self._validate_and_check_cycles(resource_id, data.dependencies)
 
         # Update the resource
         updated_resource = await self.repository.update(resource_id, data)
@@ -151,12 +114,12 @@ class ResourceService:
             cascade: If True, delete all resources that depend on this resource
 
         Raises:
-            ResourceNotFoundError: If resource doesn't exist
+            NotFoundError: If resource doesn't exist
         """
         success = await self.repository.delete(resource_id, cascade)
 
         if not success:
-            raise ResourceNotFoundError(resource_id)
+            raise NotFoundError(resource_id)
 
     async def search_resources(self, query: str | None = None) -> list[ResourceResponse]:
         """
@@ -232,6 +195,44 @@ class ResourceService:
                 raise ValidationError(
                     "Invalid dependency: resource not found", {"dependency_id": dep_id}
                 )
+
+    async def _validate_and_check_cycles(
+        self, resource_id: str, dependencies: list[str]
+    ) -> None:
+        """
+        Validate dependencies exist and check for circular dependencies.
+
+        Args:
+            resource_id: ID of resource being created/updated
+            dependencies: List of dependency IDs
+
+        Raises:
+            ValidationError: If dependencies don't exist or would create cycle
+        """
+        # Validate all dependency IDs exist
+        if dependencies:
+            await self._validate_dependencies_exist(dependencies)
+
+        # Get all existing resources
+        existing_resources = await self.repository.get_all()
+
+        # Convert to dict format for validation
+        resource_dicts = [
+            {
+                "id": self._get_resource_id(r),
+                "dependencies": self._get_resource_dependencies(r),
+            }
+            for r in existing_resources
+        ]
+
+        # Validate no cycles would be created
+        try:
+            self.topo_service.validate_no_cycles(resource_dicts, resource_id, dependencies)
+        except CircularDependencyError as e:
+            raise ValidationError(
+                "Cannot create/update resource: would create circular dependency",
+                {"cycle": str(e)},
+            )
 
     @staticmethod
     def _get_resource_id(resource: dict[str, Any] | Any) -> str:

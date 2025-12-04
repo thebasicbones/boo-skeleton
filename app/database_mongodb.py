@@ -4,7 +4,7 @@ import logging
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
-from app.exceptions import DatabaseConnectionError
+from app.exceptions import DatabaseError
 from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -27,13 +27,14 @@ def get_mongodb_client() -> AsyncIOMotorClient:
         AsyncIOMotorClient: The MongoDB client instance
 
     Raises:
-        DatabaseConnectionError: If client is not initialized
+        DatabaseError: If client is not initialized
     """
     global _mongodb_client
 
     if _mongodb_client is None:
-        raise DatabaseConnectionError(
+        raise DatabaseError(
             "MongoDB client not initialized. Call init_mongodb() first.",
+            error_type="connection",
             details="Client instance is None",
         )
 
@@ -48,7 +49,7 @@ async def get_mongodb_db() -> AsyncIOMotorDatabase:
         AsyncIOMotorDatabase: The MongoDB database instance
 
     Raises:
-        DatabaseConnectionError: If connection fails
+        DatabaseError: If connection fails
     """
     try:
         client = get_mongodb_client()
@@ -56,8 +57,10 @@ async def get_mongodb_db() -> AsyncIOMotorDatabase:
         yield db
     except Exception as e:
         logger.error(f"Failed to get MongoDB database: {e}")
-        raise DatabaseConnectionError(
-            f"Failed to access MongoDB database: {MONGODB_DATABASE}", details=str(e)
+        raise DatabaseError(
+            f"Failed to access MongoDB database: {MONGODB_DATABASE}",
+            error_type="connection",
+            details=str(e)
         )
 
 
@@ -71,7 +74,7 @@ async def init_mongodb() -> None:
     3. Creates necessary indexes on the resources collection
 
     Raises:
-        DatabaseConnectionError: If connection fails or server is unreachable
+        DatabaseError: If connection fails or server is unreachable
     """
     global _mongodb_client
 
@@ -109,11 +112,15 @@ async def init_mongodb() -> None:
     except (ConnectionFailure, ServerSelectionTimeoutError) as e:
         error_msg = f"Failed to connect to MongoDB at {MONGODB_URL}: {str(e)}"
         logger.error(error_msg)
-        raise DatabaseConnectionError(error_msg, details=f"Connection timeout: {MONGODB_TIMEOUT}ms")
+        raise DatabaseError(
+            error_msg,
+            error_type="connection",
+            details=f"Connection timeout: {MONGODB_TIMEOUT}ms"
+        )
     except Exception as e:
         error_msg = f"Unexpected error during MongoDB initialization: {str(e)}"
         logger.error(error_msg)
-        raise DatabaseConnectionError(error_msg, details=str(e))
+        raise DatabaseError(error_msg, error_type="general", details=str(e))
 
 
 async def close_mongodb() -> None:
