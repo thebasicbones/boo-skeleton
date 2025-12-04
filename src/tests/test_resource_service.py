@@ -6,8 +6,9 @@ ensuring the service layer works correctly with both backends.
 
 import pytest
 
+from app.exceptions import NotFoundError, ValidationError
 from app.schemas import ResourceCreate, ResourceUpdate
-from app.services.resource_service import ResourceNotFoundError, ResourceService, ValidationError
+from app.services.resource_service import ResourceService
 
 
 @pytest.fixture(params=["sqlite", "mongodb"])
@@ -107,7 +108,7 @@ class TestGetResource:
     @pytest.mark.asyncio
     async def test_get_non_existent_resource(self, service):
         """Test getting a non-existent resource"""
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.get_resource("non-existent-id")
 
 
@@ -160,7 +161,7 @@ class TestUpdateResource:
         """Test updating a non-existent resource"""
         update_data = ResourceUpdate(name="New Name")
 
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.update_resource("non-existent-id", update_data)
 
     @pytest.mark.asyncio
@@ -212,13 +213,13 @@ class TestDeleteResource:
         await service.delete_resource(created.id)
 
         # Verify it's gone
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.get_resource(created.id)
 
     @pytest.mark.asyncio
     async def test_delete_non_existent_resource(self, service):
         """Test deleting a non-existent resource"""
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.delete_resource("non-existent-id")
 
     @pytest.mark.asyncio
@@ -235,10 +236,10 @@ class TestDeleteResource:
         await service.delete_resource(a.id, cascade=True)
 
         # Both should be gone
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.get_resource(a.id)
 
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.get_resource(b.id)
 
     @pytest.mark.asyncio
@@ -255,7 +256,7 @@ class TestDeleteResource:
         await service.delete_resource(a.id, cascade=False)
 
         # A should be gone, B should remain
-        with pytest.raises(ResourceNotFoundError):
+        with pytest.raises(NotFoundError):
             await service.get_resource(a.id)
 
         # B should still exist

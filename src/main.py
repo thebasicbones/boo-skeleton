@@ -11,15 +11,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from app.database_factory import close_database, init_database
 from app.error_handlers import register_exception_handlers
+from app.observability import init_observability, shutdown_observability
+from app.observability.config import ObservabilitySettings
 from app.routers import resources
 from config.settings import get_settings
 
 # Load settings
 settings = get_settings()
+observability_settings = ObservabilitySettings.from_settings(settings)
 
 # Configure logging
 logging.basicConfig(
@@ -38,8 +40,18 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for FastAPI application.
     Handles startup and shutdown events.
     """
-    # Startup: Initialize database
+    # Startup: Initialize observability and database
     logger.info("Starting up application...")
+
+    # Initialize OpenTelemetry observability
+    try:
+        init_observability(observability_settings)
+        logger.info("Observability initialized successfully")
+    except Exception as e:
+        logger.warning(f"Failed to initialize observability: {e}", exc_info=True)
+        # Continue without observability
+
+    # Initialize database
     try:
         await init_database()
         logger.info("Database initialized successfully")
@@ -52,6 +64,13 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down application...")
     await close_database()
+
+    # Shutdown observability
+    try:
+        shutdown_observability()
+        logger.info("Observability shutdown successfully")
+    except Exception as e:
+        logger.warning(f"Error during observability shutdown: {e}", exc_info=True)
 
 
 # Create FastAPI application instance
@@ -103,7 +122,7 @@ register_exception_handlers(app)
 app.include_router(resources.router)
 
 # Mount static files directory for frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", tags=["root"])

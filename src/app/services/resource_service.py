@@ -1,5 +1,6 @@
 """Resource Service for business logic and coordination"""
 
+import time
 from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database_factory import get_repository
 from app.exceptions import CircularDependencyError, NotFoundError, ValidationError
+from app.observability import create_metrics_instrumentor, get_meter, observability_error_handler
 from app.schemas import ResourceCreate, ResourceResponse, ResourceUpdate
 from app.services.topological_sort_service import TopologicalSortService
 
@@ -25,6 +27,14 @@ class ResourceService:
         self.repository = get_repository(db)
         self.topo_service = TopologicalSortService()
 
+        # Initialize metrics instrumentor
+        with observability_error_handler("init_metrics"):
+            meter = get_meter(__name__)
+            self.metrics = create_metrics_instrumentor(meter)
+
+        # Determine database type for metrics
+        self.db_type = "mongodb" if hasattr(db, "list_collection_names") else "sqlite"
+
     async def create_resource(self, data: ResourceCreate) -> ResourceResponse:
         """
         Create a new resource with circular dependency validation.
@@ -38,14 +48,48 @@ class ResourceService:
         Raises:
             ValidationError: If dependencies are invalid or would create a cycle
         """
-        # Validate dependencies and check cycles
-        temp_id = "temp_new_resource_id"
-        await self._validate_and_check_cycles(temp_id, data.dependencies)
+        start_time = time.time()
 
-        # Create the resource
-        resource = await self.repository.create(data)
+        try:
+            # Validate dependencies and check cycles
+            temp_id = "temp_new_resource_id"
+            await self._validate_and_check_cycles(temp_id, data.dependencies)
 
-        return self._resource_to_response(resource)
+            # Create the resource
+            resource = await self.repository.create(data)
+
+            # Record successful operation
+            duration = time.time() - start_time
+            with observability_error_handler("record_create_metrics"):
+                self.metrics.record_operation_complete(
+                    operation="create", db_type=self.db_type, duration=duration, status="success"
+                )
+                self.metrics.increment_resource_count(self.db_type, delta=1)
+
+            return self._resource_to_response(resource)
+
+        except ValidationError:
+            # Record validation error
+            duration = time.time() - start_time
+            with observability_error_handler("record_create_error"):
+                self.metrics.record_operation_error(
+                    operation="create",
+                    db_type=self.db_type,
+                    error_type="validation",
+                    duration=duration,
+                )
+            raise
+        except Exception:
+            # Record unexpected error
+            duration = time.time() - start_time
+            with observability_error_handler("record_create_error"):
+                self.metrics.record_operation_error(
+                    operation="create",
+                    db_type=self.db_type,
+                    error_type="database",
+                    duration=duration,
+                )
+            raise
 
     async def get_resource(self, resource_id: str) -> ResourceResponse:
         """
@@ -60,12 +104,42 @@ class ResourceService:
         Raises:
             NotFoundError: If resource doesn't exist
         """
-        resource = await self.repository.get_by_id(resource_id)
+        start_time = time.time()
 
-        if not resource:
-            raise NotFoundError(resource_id)
+        try:
+            resource = await self.repository.get_by_id(resource_id)
 
-        return self._resource_to_response(resource)
+            if not resource:
+                raise NotFoundError(resource_id)
+
+            # Record successful operation
+            duration = time.time() - start_time
+            with observability_error_handler("record_read_metrics"):
+                self.metrics.record_operation_complete(
+                    operation="read", db_type=self.db_type, duration=duration, status="success"
+                )
+
+            return self._resource_to_response(resource)
+
+        except NotFoundError:
+            # Record not found error
+            duration = time.time() - start_time
+            with observability_error_handler("record_read_error"):
+                self.metrics.record_operation_error(
+                    operation="read",
+                    db_type=self.db_type,
+                    error_type="not_found",
+                    duration=duration,
+                )
+            raise
+        except Exception:
+            # Record unexpected error
+            duration = time.time() - start_time
+            with observability_error_handler("record_read_error"):
+                self.metrics.record_operation_error(
+                    operation="read", db_type=self.db_type, error_type="database", duration=duration
+                )
+            raise
 
     async def get_all_resources(self) -> list[ResourceResponse]:
         """
@@ -92,19 +166,63 @@ class ResourceService:
             NotFoundError: If resource doesn't exist
             ValidationError: If dependencies are invalid or would create a cycle
         """
-        # Check if resource exists
-        existing_resource = await self.repository.get_by_id(resource_id)
-        if not existing_resource:
-            raise NotFoundError(resource_id)
+        start_time = time.time()
 
-        # Validate dependencies if being updated
-        if data.dependencies is not None:
-            await self._validate_and_check_cycles(resource_id, data.dependencies)
+        try:
+            # Check if resource exists
+            existing_resource = await self.repository.get_by_id(resource_id)
+            if not existing_resource:
+                raise NotFoundError(resource_id)
 
-        # Update the resource
-        updated_resource = await self.repository.update(resource_id, data)
+            # Validate dependencies if being updated
+            if data.dependencies is not None:
+                await self._validate_and_check_cycles(resource_id, data.dependencies)
 
-        return self._resource_to_response(updated_resource)
+            # Update the resource
+            updated_resource = await self.repository.update(resource_id, data)
+
+            # Record successful operation
+            duration = time.time() - start_time
+            with observability_error_handler("record_update_metrics"):
+                self.metrics.record_operation_complete(
+                    operation="update", db_type=self.db_type, duration=duration, status="success"
+                )
+
+            return self._resource_to_response(updated_resource)
+
+        except NotFoundError:
+            # Record not found error
+            duration = time.time() - start_time
+            with observability_error_handler("record_update_error"):
+                self.metrics.record_operation_error(
+                    operation="update",
+                    db_type=self.db_type,
+                    error_type="not_found",
+                    duration=duration,
+                )
+            raise
+        except ValidationError:
+            # Record validation error
+            duration = time.time() - start_time
+            with observability_error_handler("record_update_error"):
+                self.metrics.record_operation_error(
+                    operation="update",
+                    db_type=self.db_type,
+                    error_type="validation",
+                    duration=duration,
+                )
+            raise
+        except Exception:
+            # Record unexpected error
+            duration = time.time() - start_time
+            with observability_error_handler("record_update_error"):
+                self.metrics.record_operation_error(
+                    operation="update",
+                    db_type=self.db_type,
+                    error_type="database",
+                    duration=duration,
+                )
+            raise
 
     async def delete_resource(self, resource_id: str, cascade: bool = False) -> None:
         """
@@ -117,10 +235,62 @@ class ResourceService:
         Raises:
             NotFoundError: If resource doesn't exist
         """
-        success = await self.repository.delete(resource_id, cascade)
+        start_time = time.time()
 
-        if not success:
-            raise NotFoundError(resource_id)
+        try:
+            # Count resources before delete for cascade metrics
+            if cascade:
+                all_resources = await self.repository.get_all()
+                initial_count = len(all_resources)
+
+            success = await self.repository.delete(resource_id, cascade)
+
+            if not success:
+                raise NotFoundError(resource_id)
+
+            # Calculate cascade delete count if applicable
+            cascade_count = 1
+            if cascade:
+                all_resources_after = await self.repository.get_all()
+                cascade_count = initial_count - len(all_resources_after)
+
+            # Record successful operation
+            duration = time.time() - start_time
+            with observability_error_handler("record_delete_metrics"):
+                self.metrics.record_operation_complete(
+                    operation="delete",
+                    db_type=self.db_type,
+                    duration=duration,
+                    status="success",
+                    cascade=cascade,
+                )
+                self.metrics.increment_resource_count(self.db_type, delta=-cascade_count)
+
+                if cascade and cascade_count > 1:
+                    self.metrics.record_cascade_delete(cascade_count, self.db_type)
+
+        except NotFoundError:
+            # Record not found error
+            duration = time.time() - start_time
+            with observability_error_handler("record_delete_error"):
+                self.metrics.record_operation_error(
+                    operation="delete",
+                    db_type=self.db_type,
+                    error_type="not_found",
+                    duration=duration,
+                )
+            raise
+        except Exception:
+            # Record unexpected error
+            duration = time.time() - start_time
+            with observability_error_handler("record_delete_error"):
+                self.metrics.record_operation_error(
+                    operation="delete",
+                    db_type=self.db_type,
+                    error_type="database",
+                    duration=duration,
+                )
+            raise
 
     async def search_resources(self, query: str | None = None) -> list[ResourceResponse]:
         """
@@ -136,45 +306,94 @@ class ResourceService:
         Raises:
             ValidationError: If circular dependency is detected in results
         """
-        # Search for matching resources
-        resources = await self.repository.search(query)
+        start_time = time.time()
 
-        if not resources:
-            return []
-
-        # Convert to dict format for topological sort
-        resource_dicts = [
-            {
-                "id": self._get_resource_id(r),
-                "name": self._get_resource_name(r),
-                "description": self._get_resource_description(r),
-                "dependencies": self._get_resource_dependencies(r),
-                "created_at": self._get_resource_created_at(r),
-                "updated_at": self._get_resource_updated_at(r),
-            }
-            for r in resources
-        ]
-
-        # Sort topologically
         try:
-            sorted_dicts = self.topo_service.topological_sort(resource_dicts)
-        except CircularDependencyError as e:
-            raise ValidationError(
-                "Circular dependency detected in search results", {"cycle": str(e)}
-            )
+            # Search for matching resources
+            resources = await self.repository.search(query)
 
-        # Convert back to ResourceResponse
-        return [
-            ResourceResponse(
-                id=r["id"],
-                name=r["name"],
-                description=r["description"],
-                dependencies=r["dependencies"],
-                created_at=r["created_at"],
-                updated_at=r["updated_at"],
-            )
-            for r in sorted_dicts
-        ]
+            if not resources:
+                # Record successful empty search
+                duration = time.time() - start_time
+                with observability_error_handler("record_search_metrics"):
+                    self.metrics.record_operation_complete(
+                        operation="search",
+                        db_type=self.db_type,
+                        duration=duration,
+                        status="success",
+                        result_count=0,
+                    )
+                return []
+
+            # Convert to dict format for topological sort
+            resource_dicts = [
+                {
+                    "id": self._get_resource_id(r),
+                    "name": self._get_resource_name(r),
+                    "description": self._get_resource_description(r),
+                    "dependencies": self._get_resource_dependencies(r),
+                    "created_at": self._get_resource_created_at(r),
+                    "updated_at": self._get_resource_updated_at(r),
+                }
+                for r in resources
+            ]
+
+            # Sort topologically
+            try:
+                sorted_dicts = self.topo_service.topological_sort(resource_dicts)
+            except CircularDependencyError as e:
+                raise ValidationError(
+                    "Circular dependency detected in search results", {"cycle": str(e)}
+                )
+
+            # Convert back to ResourceResponse
+            results = [
+                ResourceResponse(
+                    id=r["id"],
+                    name=r["name"],
+                    description=r["description"],
+                    dependencies=r["dependencies"],
+                    created_at=r["created_at"],
+                    updated_at=r["updated_at"],
+                )
+                for r in sorted_dicts
+            ]
+
+            # Record successful operation
+            duration = time.time() - start_time
+            with observability_error_handler("record_search_metrics"):
+                self.metrics.record_operation_complete(
+                    operation="search",
+                    db_type=self.db_type,
+                    duration=duration,
+                    status="success",
+                    result_count=len(results),
+                )
+
+            return results
+
+        except ValidationError:
+            # Record validation error (circular dependency)
+            duration = time.time() - start_time
+            with observability_error_handler("record_search_error"):
+                self.metrics.record_operation_error(
+                    operation="search",
+                    db_type=self.db_type,
+                    error_type="circular_dependency",
+                    duration=duration,
+                )
+            raise
+        except Exception:
+            # Record unexpected error
+            duration = time.time() - start_time
+            with observability_error_handler("record_search_error"):
+                self.metrics.record_operation_error(
+                    operation="search",
+                    db_type=self.db_type,
+                    error_type="database",
+                    duration=duration,
+                )
+            raise
 
     async def _validate_dependencies_exist(self, dependency_ids: list[str]) -> None:
         """
