@@ -1,0 +1,156 @@
+# Template Manifest
+# Defines which files to copy, render, or conditionally include
+
+# Static files - copied as-is from source project
+static_files:
+  - source: app/__init__.py
+    dest: app/__init__.py
+  
+  - source: app/schemas.py
+    dest: app/schemas.py
+  
+  - source: app/exceptions.py
+    dest: app/exceptions.py
+  
+  - source: app/error_handlers.py
+    dest: app/error_handlers.py
+  
+  - source: app/models/__init__.py
+    dest: app/models/__init__.py
+  
+  - source: app/models/sqlalchemy_resource.py
+    dest: app/models/sqlalchemy_resource.py
+    condition: database_type in ['sqlite', 'postgresql']
+  
+  - source: app/repositories/__init__.py
+    dest: app/repositories/__init__.py
+  
+  - source: app/repositories/base_resource_repository.py
+    dest: app/repositories/base_resource_repository.py
+  
+  - source: app/repositories/sqlalchemy_resource_repository.py
+    dest: app/repositories/sqlalchemy_resource_repository.py
+    condition: database_type in ['sqlite', 'postgresql']
+  
+  - source: app/repositories/mongodb_resource_repository.py
+    dest: app/repositories/mongodb_resource_repository.py
+    condition: database_type == 'mongodb'
+  
+  - source: app/services/__init__.py
+    dest: app/services/__init__.py
+  
+  - source: app/services/resource_service.py
+    dest: app/services/resource_service.py
+  
+  - source: app/services/topological_sort_service.py
+    dest: app/services/topological_sort_service.py
+  
+  - source: app/routers/__init__.py
+    dest: app/routers/__init__.py
+  
+  - source: app/routers/resources.py
+    dest: app/routers/resources.py
+  
+  - source: config/__init__.py
+    dest: config/__init__.py
+  
+  - source: tests/conftest.py
+    dest: tests/conftest.py
+  
+  - source: tests/test_api_endpoints.py
+    dest: tests/test_api_endpoints.py
+  
+  - source: .coveragerc
+    dest: .coveragerc
+    condition: include_dev_tools
+  
+  - source: pytest.ini
+    dest: pytest.ini
+    condition: include_dev_tools
+  
+  - source: .gitignore
+    dest: .gitignore
+  
+  - source: VERSION
+    dest: VERSION
+  
+
+
+# Template files - rendered with Jinja2
+template_files:
+  - template: project/.env.j2
+    dest: .env
+  
+  - template: project/.env.example.j2
+    dest: .env.example
+  
+  - template: project/.gitignore.j2
+    dest: .gitignore
+  
+  - template: project/pyproject.toml.j2
+    dest: pyproject.toml
+  
+  - template: project/requirements.txt.j2
+    dest: requirements.txt
+  
+  - template: project/README.md.j2
+    dest: README.md
+  
+  - template: project/main.py.j2
+    dest: main.py
+  
+  - template: project/VERSION.j2
+    dest: VERSION
+  
+  - template: project/CHANGELOG.md.j2
+    dest: CHANGELOG.md
+  
+  - template: project/run.sh.j2
+    dest: run.sh
+    executable: true
+  
+  - template: project/app/database_factory.py.j2
+    dest: app/database_factory.py
+  
+  - template: project/app/database_sqlalchemy.py.j2
+    dest: app/database_sqlalchemy.py
+    condition: database_type in ['sqlite', 'postgresql']
+  
+  - template: project/app/database_mongodb.py.j2
+    dest: app/database_mongodb.py
+    condition: database_type == 'mongodb'
+  
+  - template: project/config/settings.py.j2
+    dest: config/settings.py
+  
+
+  
+  - template: project/static/index.html.j2
+    dest: static/index.html
+    condition: include_static
+  
+  - template: static/styles.css
+    dest: static/styles.css
+    condition: include_static
+    copy_only: true
+  
+  - template: static/app.js
+    dest: static/app.js
+    condition: include_static
+    copy_only: true
+  
+  - template: project/scripts/populate_example.py.j2
+    dest: scripts/populate_example.py
+    condition: include_examples
+  
+  - template: project/pytest.ini.j2
+    dest: pytest.ini
+    condition: include_dev_tools
+  
+  - template: project/.coveragerc.j2
+    dest: .coveragerc
+    condition: include_dev_tools
+
+# Empty files to create
+empty_files:
+  - tests/__init__.py
