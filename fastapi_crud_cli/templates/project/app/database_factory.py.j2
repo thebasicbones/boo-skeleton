@@ -1,0 +1,49 @@
+"""
+Database factory for creating database connections and repositories
+"""
+from config.settings import get_settings
+
+{% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+from app.database_sqlalchemy import (
+    init_database as init_sqlalchemy,
+    close_database as close_sqlalchemy,
+    get_db_session
+)
+from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
+{% elif database_type == 'mongodb' -%}
+from app.database_mongodb import (
+    init_database as init_mongodb,
+    close_database as close_mongodb,
+    get_db_client
+)
+from app.repositories.mongodb_resource_repository import MongoDBResourceRepository
+{% endif -%}
+
+
+async def init_database():
+    """Initialize the database connection."""
+    settings = get_settings()
+    {% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+    await init_sqlalchemy()
+    {% elif database_type == 'mongodb' -%}
+    await init_mongodb()
+    {% endif -%}
+
+
+async def close_database():
+    """Close the database connection."""
+    {% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+    await close_sqlalchemy()
+    {% elif database_type == 'mongodb' -%}
+    await close_mongodb()
+    {% endif -%}
+
+
+def get_repository():
+    """Get the appropriate repository based on database type."""
+    settings = get_settings()
+    {% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+    return SQLAlchemyResourceRepository()
+    {% elif database_type == 'mongodb' -%}
+    return MongoDBResourceRepository()
+    {% endif -%}
