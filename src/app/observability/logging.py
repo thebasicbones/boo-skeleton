@@ -47,8 +47,8 @@ class TraceContextFilter(logging.Filter):
 
         # Add trace context if available
         if span_context.is_valid:
-            record.trace_id = format(span_context.trace_id, '032x')
-            record.span_id = format(span_context.span_id, '016x')
+            record.trace_id = format(span_context.trace_id, "032x")
+            record.span_id = format(span_context.span_id, "016x")
         else:
             record.trace_id = None
             record.span_id = None
@@ -88,23 +88,23 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         super().add_fields(log_record, record, message_dict)
 
         # Add timestamp in ISO format
-        log_record['timestamp'] = self.formatTime(record, self.datefmt)
+        log_record["timestamp"] = self.formatTime(record, self.datefmt)
 
         # Add log level
-        log_record['level'] = record.levelname
+        log_record["level"] = record.levelname
 
         # Add logger name
-        log_record['logger'] = record.name
+        log_record["logger"] = record.name
 
         # Add trace context if available
-        if hasattr(record, 'trace_id') and record.trace_id:
-            log_record['trace_id'] = record.trace_id
-        if hasattr(record, 'span_id') and record.span_id:
-            log_record['span_id'] = record.span_id
+        if hasattr(record, "trace_id") and record.trace_id:
+            log_record["trace_id"] = record.trace_id
+        if hasattr(record, "span_id") and record.span_id:
+            log_record["span_id"] = record.span_id
 
         # Add exception info if present
         if record.exc_info:
-            log_record['exception'] = self.formatException(record.exc_info)
+            log_record["exception"] = self.formatException(record.exc_info)
 
 
 class StructuredLogger:
@@ -139,10 +139,7 @@ class StructuredLogger:
 
     @classmethod
     def create(
-        cls,
-        name: str,
-        service_name: str = "fastapi-crud-backend",
-        level: int = logging.INFO
+        cls, name: str, service_name: str = "fastapi-crud-backend", level: int = logging.INFO
     ) -> "StructuredLogger":
         """
         Create a new StructuredLogger with JSON formatting and trace context.
@@ -172,8 +169,7 @@ class StructuredLogger:
             # Create handler with JSON formatter
             handler = logging.StreamHandler()
             formatter = CustomJsonFormatter(
-                '%(timestamp)s %(level)s %(name)s %(message)s',
-                datefmt='%Y-%m-%dT%H:%M:%S.%fZ'
+                "%(timestamp)s %(level)s %(name)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S.%fZ"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
@@ -199,10 +195,7 @@ class StructuredLogger:
         return context
 
     def log_operation_start(
-        self,
-        operation: str,
-        resource_id: str | None = None,
-        **context: Any
+        self, operation: str, resource_id: str | None = None, **context: Any
     ) -> None:
         """
         Log operation start with trace context.
@@ -223,9 +216,7 @@ class StructuredLogger:
             ... )
         """
         log_context = self._build_context(
-            operation_type=operation,
-            resource_id=resource_id,
-            **context
+            operation_type=operation, resource_id=resource_id, **context
         )
 
         message = f"Starting {operation} operation"
@@ -235,11 +226,7 @@ class StructuredLogger:
         self.logger.info(message, extra=log_context)
 
     def log_operation_complete(
-        self,
-        operation: str,
-        duration: float,
-        resource_id: str | None = None,
-        **context: Any
+        self, operation: str, duration: float, resource_id: str | None = None, **context: Any
     ) -> None:
         """
         Log operation completion with duration and outcome.
@@ -270,7 +257,7 @@ class StructuredLogger:
             resource_id=resource_id,
             duration_ms=round(duration_ms, 2),
             status=context.get("status", "success"),
-            **context
+            **context,
         )
 
         message = f"Completed {operation} operation in {duration_ms:.2f}ms"
@@ -280,11 +267,7 @@ class StructuredLogger:
         self.logger.info(message, extra=log_context)
 
     def log_error(
-        self,
-        operation: str,
-        error: Exception,
-        resource_id: str | None = None,
-        **context: Any
+        self, operation: str, error: Exception, resource_id: str | None = None, **context: Any
     ) -> None:
         """
         Log error with full context and exception details.
@@ -314,7 +297,7 @@ class StructuredLogger:
             error_type=error_type,
             error_message=str(error),
             status="error",
-            **context
+            **context,
         )
 
         message = f"Error in {operation} operation: {error_type}"
@@ -324,11 +307,7 @@ class StructuredLogger:
         self.logger.error(message, extra=log_context, exc_info=True)
 
     def log_validation_error(
-        self,
-        operation: str,
-        field: str,
-        error_message: str,
-        **context: Any
+        self, operation: str, field: str, error_message: str, **context: Any
     ) -> None:
         """
         Log validation error with field details.
@@ -356,7 +335,7 @@ class StructuredLogger:
             validation_field=field,
             error_message=error_message,
             status="error",
-            **context
+            **context,
         )
 
         message = f"Validation error in {operation} operation: {field} - {error_message}"
@@ -364,11 +343,7 @@ class StructuredLogger:
         self.logger.warning(message, extra=log_context)
 
     def log_circular_dependency(
-        self,
-        operation: str,
-        resource_id: str,
-        cycle: list[str],
-        **context: Any
+        self, operation: str, resource_id: str, cycle: list[str], **context: Any
     ) -> None:
         """
         Log circular dependency detection.
@@ -396,7 +371,7 @@ class StructuredLogger:
             cycle_path=" -> ".join(cycle),
             cycle_length=len(cycle),
             status="error",
-            **context
+            **context,
         )
 
         message = f"Circular dependency detected in {operation} operation: {' -> '.join(cycle)}"
@@ -408,7 +383,7 @@ class StructuredLogger:
         resource_id: str,
         deleted_count: int,
         deleted_ids: list[str] | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """
         Log cascade delete operation.
@@ -433,7 +408,7 @@ class StructuredLogger:
             operation_type="delete",
             resource_id=resource_id,
             cascade_delete_count=deleted_count,
-            **context
+            **context,
         )
 
         if deleted_ids:
@@ -444,11 +419,7 @@ class StructuredLogger:
         self.logger.info(message, extra=log_context)
 
     def log_search(
-        self,
-        query: str | None,
-        result_count: int,
-        duration: float,
-        **context: Any
+        self, query: str | None, result_count: int, duration: float, **context: Any
     ) -> None:
         """
         Log search operation with query and results.
@@ -479,7 +450,7 @@ class StructuredLogger:
             result_count=result_count,
             duration_ms=round(duration_ms, 2),
             has_query=query is not None,
-            **context
+            **context,
         )
 
         if query:

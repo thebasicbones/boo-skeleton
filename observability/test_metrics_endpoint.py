@@ -33,7 +33,7 @@ async def test_metrics():
         resource_data = {
             "name": "Test Resource for Metrics",
             "description": "This resource is created to test metrics",
-            "dependencies": []
+            "dependencies": [],
         }
         response = await client.post(f"{base_url}/api/resources", json=resource_data)
         print(f"   Status: {response.status_code}")
@@ -60,7 +60,7 @@ async def test_metrics():
         print("\n5. Updating resource...")
         update_data = {
             "name": "Updated Test Resource",
-            "description": "Updated description for metrics testing"
+            "description": "Updated description for metrics testing",
         }
         response = await client.put(f"{base_url}/api/resources/{resource_id}", json=update_data)
         print(f"   Status: {response.status_code}")
@@ -125,7 +125,9 @@ async def test_metrics():
     print("   rate(crud_operation_duration_sum[5m]) / rate(crud_operation_duration_count[5m])")
     print("   crud_resources_total")
 
-    print("\n⏱️  Note: Metrics are exported every 10 seconds (OTEL_METRICS_EXPORT_INTERVAL_MS=10000)")
+    print(
+        "\n⏱️  Note: Metrics are exported every 10 seconds (OTEL_METRICS_EXPORT_INTERVAL_MS=10000)"
+    )
     print("    Wait 10-15 seconds after running this script, then check your metrics backend.")
     print()
 

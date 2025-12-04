@@ -38,72 +38,49 @@ class ObservabilitySettings(BaseModel):
     """
 
     # Enable/disable observability
-    otel_enabled: bool = Field(
-        default=True,
-        description="Enable OpenTelemetry observability"
-    )
+    otel_enabled: bool = Field(default=True, description="Enable OpenTelemetry observability")
 
     # Service identification
     service_name: str = Field(
-        default="fastapi-crud-backend",
-        description="Service name for telemetry"
+        default="fastapi-crud-backend", description="Service name for telemetry"
     )
-    service_version: str = Field(
-        default="1.0.0",
-        description="Service version"
-    )
+    service_version: str = Field(default="1.0.0", description="Service version")
     deployment_environment: str = Field(
         default="development",
-        description="Deployment environment (development, staging, production)"
+        description="Deployment environment (development, staging, production)",
     )
 
     # OTLP Endpoints
     otlp_endpoint: str = Field(
-        default="http://localhost:4317",
-        description="OTLP gRPC endpoint for all telemetry"
+        default="http://localhost:4317", description="OTLP gRPC endpoint for all telemetry"
     )
     otlp_metrics_endpoint: str | None = Field(
-        default=None,
-        description="Separate OTLP endpoint for metrics (optional)"
+        default=None, description="Separate OTLP endpoint for metrics (optional)"
     )
     otlp_traces_endpoint: str | None = Field(
-        default=None,
-        description="Separate OTLP endpoint for traces (optional)"
+        default=None, description="Separate OTLP endpoint for traces (optional)"
     )
     otlp_logs_endpoint: str | None = Field(
-        default=None,
-        description="Separate OTLP endpoint for logs (optional)"
+        default=None, description="Separate OTLP endpoint for logs (optional)"
     )
 
     # Export configuration
     metrics_export_interval_ms: int = Field(
-        default=60000,
-        description="Metrics export interval in milliseconds",
-        ge=1000
+        default=60000, description="Metrics export interval in milliseconds", ge=1000
     )
     traces_export_batch_size: int = Field(
-        default=512,
-        description="Batch size for trace export",
-        ge=1
+        default=512, description="Batch size for trace export", ge=1
     )
-    logs_export_batch_size: int = Field(
-        default=512,
-        description="Batch size for log export",
-        ge=1
-    )
+    logs_export_batch_size: int = Field(default=512, description="Batch size for log export", ge=1)
 
     # Sampling
     traces_sample_rate: float = Field(
-        default=1.0,
-        ge=0.0,
-        le=1.0,
-        description="Trace sampling rate (0.0 to 1.0, 1.0 = 100%)"
+        default=1.0, ge=0.0, le=1.0, description="Trace sampling rate (0.0 to 1.0, 1.0 = 100%)"
     )
 
     # Connection settings
     otlp_insecure: bool = Field(
-        default=True,
-        description="Use insecure connection (no TLS) - set to False in production"
+        default=True, description="Use insecure connection (no TLS) - set to False in production"
     )
 
     model_config = {

@@ -47,9 +47,7 @@ class TestObservabilitySettings:
 
     def test_endpoint_fallback(self):
         """Test that endpoint getters fall back to default OTLP endpoint."""
-        settings = ObservabilitySettings(
-            otlp_endpoint="http://default:4317"
-        )
+        settings = ObservabilitySettings(otlp_endpoint="http://default:4317")
 
         # When specific endpoints are not set, should fall back to default
         assert settings.get_metrics_endpoint() == "http://default:4317"
@@ -73,8 +71,8 @@ class TestObservabilitySettings:
 class TestObservabilityInitialization:
     """Test observability initialization and shutdown."""
 
-    @patch('app.observability.OTLPMetricExporter')
-    @patch('app.observability.OTLPSpanExporter')
+    @patch("app.observability.OTLPMetricExporter")
+    @patch("app.observability.OTLPSpanExporter")
     def test_init_observability_enabled(self, mock_span_exporter, mock_metric_exporter):
         """Test that observability initializes when enabled."""
         settings = ObservabilitySettings(otel_enabled=True)
@@ -97,8 +95,8 @@ class TestObservabilityInitialization:
         init_observability(settings)
         shutdown_observability()
 
-    @patch('app.observability.OTLPMetricExporter')
-    @patch('app.observability.OTLPSpanExporter')
+    @patch("app.observability.OTLPMetricExporter")
+    @patch("app.observability.OTLPSpanExporter")
     def test_get_meter(self, mock_span_exporter, mock_metric_exporter):
         """Test getting a meter instance."""
         settings = ObservabilitySettings(otel_enabled=True)
@@ -109,8 +107,8 @@ class TestObservabilityInitialization:
 
         shutdown_observability()
 
-    @patch('app.observability.OTLPMetricExporter')
-    @patch('app.observability.OTLPSpanExporter')
+    @patch("app.observability.OTLPMetricExporter")
+    @patch("app.observability.OTLPSpanExporter")
     def test_get_tracer(self, mock_span_exporter, mock_metric_exporter):
         """Test getting a tracer instance."""
         settings = ObservabilitySettings(otel_enabled=True)

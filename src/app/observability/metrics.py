@@ -40,11 +40,7 @@ def observability_error_handler(operation: str, **context: Any):
     try:
         yield
     except Exception as e:
-        logger.error(
-            f"Observability error in {operation}: {e}",
-            extra=context,
-            exc_info=True
-        )
+        logger.error(f"Observability error in {operation}: {e}", extra=context, exc_info=True)
         # Don't re-raise - allow application to continue
 
 
@@ -98,37 +94,29 @@ class MetricsInstrumentor:
         """
         # Operation duration histogram (in milliseconds)
         self.operation_duration: Histogram = self.meter.create_histogram(
-            name="crud.operation.duration",
-            description="Time taken for CRUD operations",
-            unit="ms"
+            name="crud.operation.duration", description="Time taken for CRUD operations", unit="ms"
         )
 
         # Operation count counter
         self.operation_count: Counter = self.meter.create_counter(
-            name="crud.operation.count",
-            description="Total number of CRUD operations",
-            unit="1"
+            name="crud.operation.count", description="Total number of CRUD operations", unit="1"
         )
 
         # Operation errors counter
         self.operation_errors: Counter = self.meter.create_counter(
-            name="crud.operation.errors",
-            description="Number of failed CRUD operations",
-            unit="1"
+            name="crud.operation.errors", description="Number of failed CRUD operations", unit="1"
         )
 
         # Resource total up-down counter
         self.resources_total: UpDownCounter = self.meter.create_up_down_counter(
-            name="crud.resources.total",
-            description="Current total number of resources",
-            unit="1"
+            name="crud.resources.total", description="Current total number of resources", unit="1"
         )
 
         # Cascade delete count histogram
         self.cascade_delete_count: Histogram = self.meter.create_histogram(
             name="crud.cascade.delete.count",
             description="Number of resources deleted in cascade operations",
-            unit="1"
+            unit="1",
         )
 
         logger.info("Metrics instruments initialized successfully")
@@ -158,7 +146,7 @@ class MetricsInstrumentor:
         db_type: str,
         duration: float,
         status: str = "success",
-        **additional_attributes: Any
+        **additional_attributes: Any,
     ) -> None:
         """
         Record successful operation completion.
@@ -201,7 +189,7 @@ class MetricsInstrumentor:
 
             logger.debug(
                 f"Recorded {status} {operation} operation: {duration_ms:.2f}ms",
-                extra={"operation": operation, "db_type": db_type, "duration_ms": duration_ms}
+                extra={"operation": operation, "db_type": db_type, "duration_ms": duration_ms},
             )
 
     def record_operation_error(
@@ -210,7 +198,7 @@ class MetricsInstrumentor:
         db_type: str,
         error_type: str,
         duration: float | None = None,
-        **additional_attributes: Any
+        **additional_attributes: Any,
     ) -> None:
         """
         Record operation failure.
@@ -254,7 +242,7 @@ class MetricsInstrumentor:
 
             logger.debug(
                 f"Recorded error for {operation} operation: {error_type}",
-                extra={"operation": operation, "db_type": db_type, "error_type": error_type}
+                extra={"operation": operation, "db_type": db_type, "error_type": error_type},
             )
 
     def increment_resource_count(self, db_type: str, delta: int = 1) -> None:
@@ -279,8 +267,7 @@ class MetricsInstrumentor:
             self.resources_total.add(delta, attributes)
 
             logger.debug(
-                f"Resource count changed by {delta}",
-                extra={"db_type": db_type, "delta": delta}
+                f"Resource count changed by {delta}", extra={"db_type": db_type, "delta": delta}
             )
 
     def record_cascade_delete(self, count: int, db_type: str) -> None:
@@ -304,7 +291,7 @@ class MetricsInstrumentor:
 
             logger.debug(
                 f"Recorded cascade delete of {count} resources",
-                extra={"db_type": db_type, "count": count}
+                extra={"db_type": db_type, "count": count},
             )
 
 

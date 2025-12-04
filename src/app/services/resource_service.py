@@ -62,10 +62,7 @@ class ResourceService:
             duration = time.time() - start_time
             with observability_error_handler("record_create_metrics"):
                 self.metrics.record_operation_complete(
-                    operation="create",
-                    db_type=self.db_type,
-                    duration=duration,
-                    status="success"
+                    operation="create", db_type=self.db_type, duration=duration, status="success"
                 )
                 self.metrics.increment_resource_count(self.db_type, delta=1)
 
@@ -79,7 +76,7 @@ class ResourceService:
                     operation="create",
                     db_type=self.db_type,
                     error_type="validation",
-                    duration=duration
+                    duration=duration,
                 )
             raise
         except Exception:
@@ -90,7 +87,7 @@ class ResourceService:
                     operation="create",
                     db_type=self.db_type,
                     error_type="database",
-                    duration=duration
+                    duration=duration,
                 )
             raise
 
@@ -119,10 +116,7 @@ class ResourceService:
             duration = time.time() - start_time
             with observability_error_handler("record_read_metrics"):
                 self.metrics.record_operation_complete(
-                    operation="read",
-                    db_type=self.db_type,
-                    duration=duration,
-                    status="success"
+                    operation="read", db_type=self.db_type, duration=duration, status="success"
                 )
 
             return self._resource_to_response(resource)
@@ -135,7 +129,7 @@ class ResourceService:
                     operation="read",
                     db_type=self.db_type,
                     error_type="not_found",
-                    duration=duration
+                    duration=duration,
                 )
             raise
         except Exception:
@@ -143,10 +137,7 @@ class ResourceService:
             duration = time.time() - start_time
             with observability_error_handler("record_read_error"):
                 self.metrics.record_operation_error(
-                    operation="read",
-                    db_type=self.db_type,
-                    error_type="database",
-                    duration=duration
+                    operation="read", db_type=self.db_type, error_type="database", duration=duration
                 )
             raise
 
@@ -194,10 +185,7 @@ class ResourceService:
             duration = time.time() - start_time
             with observability_error_handler("record_update_metrics"):
                 self.metrics.record_operation_complete(
-                    operation="update",
-                    db_type=self.db_type,
-                    duration=duration,
-                    status="success"
+                    operation="update", db_type=self.db_type, duration=duration, status="success"
                 )
 
             return self._resource_to_response(updated_resource)
@@ -210,7 +198,7 @@ class ResourceService:
                     operation="update",
                     db_type=self.db_type,
                     error_type="not_found",
-                    duration=duration
+                    duration=duration,
                 )
             raise
         except ValidationError:
@@ -221,7 +209,7 @@ class ResourceService:
                     operation="update",
                     db_type=self.db_type,
                     error_type="validation",
-                    duration=duration
+                    duration=duration,
                 )
             raise
         except Exception:
@@ -232,7 +220,7 @@ class ResourceService:
                     operation="update",
                     db_type=self.db_type,
                     error_type="database",
-                    duration=duration
+                    duration=duration,
                 )
             raise
 
@@ -274,7 +262,7 @@ class ResourceService:
                     db_type=self.db_type,
                     duration=duration,
                     status="success",
-                    cascade=cascade
+                    cascade=cascade,
                 )
                 self.metrics.increment_resource_count(self.db_type, delta=-cascade_count)
 
@@ -289,7 +277,7 @@ class ResourceService:
                     operation="delete",
                     db_type=self.db_type,
                     error_type="not_found",
-                    duration=duration
+                    duration=duration,
                 )
             raise
         except Exception:
@@ -300,7 +288,7 @@ class ResourceService:
                     operation="delete",
                     db_type=self.db_type,
                     error_type="database",
-                    duration=duration
+                    duration=duration,
                 )
             raise
 
@@ -333,7 +321,7 @@ class ResourceService:
                         db_type=self.db_type,
                         duration=duration,
                         status="success",
-                        result_count=0
+                        result_count=0,
                     )
                 return []
 
@@ -379,7 +367,7 @@ class ResourceService:
                     db_type=self.db_type,
                     duration=duration,
                     status="success",
-                    result_count=len(results)
+                    result_count=len(results),
                 )
 
             return results
@@ -392,7 +380,7 @@ class ResourceService:
                     operation="search",
                     db_type=self.db_type,
                     error_type="circular_dependency",
-                    duration=duration
+                    duration=duration,
                 )
             raise
         except Exception:
@@ -403,7 +391,7 @@ class ResourceService:
                     operation="search",
                     db_type=self.db_type,
                     error_type="database",
-                    duration=duration
+                    duration=duration,
                 )
             raise
 

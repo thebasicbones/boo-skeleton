@@ -69,64 +69,43 @@ class Settings(BaseSettings):
     allowed_origins: list[str] = Field(default=["*"], description="CORS allowed origins")
 
     # OpenTelemetry Configuration
-    otel_enabled: bool = Field(
-        default=True,
-        description="Enable OpenTelemetry observability"
-    )
+    otel_enabled: bool = Field(default=True, description="Enable OpenTelemetry observability")
     otel_service_name: str = Field(
-        default="fastapi-crud-backend",
-        description="Service name for telemetry"
+        default="fastapi-crud-backend", description="Service name for telemetry"
     )
-    otel_service_version: str = Field(
-        default="1.0.0",
-        description="Service version"
-    )
+    otel_service_version: str = Field(default="1.0.0", description="Service version")
 
     # OTLP Endpoints
     otel_otlp_endpoint: str = Field(
-        default="http://localhost:4317",
-        description="OTLP gRPC endpoint for all telemetry"
+        default="http://localhost:4317", description="OTLP gRPC endpoint for all telemetry"
     )
     otel_otlp_metrics_endpoint: str | None = Field(
-        default=None,
-        description="Separate OTLP endpoint for metrics (optional)"
+        default=None, description="Separate OTLP endpoint for metrics (optional)"
     )
     otel_otlp_traces_endpoint: str | None = Field(
-        default=None,
-        description="Separate OTLP endpoint for traces (optional)"
+        default=None, description="Separate OTLP endpoint for traces (optional)"
     )
     otel_otlp_logs_endpoint: str | None = Field(
-        default=None,
-        description="Separate OTLP endpoint for logs (optional)"
+        default=None, description="Separate OTLP endpoint for logs (optional)"
     )
 
     # Export Configuration
     otel_metrics_export_interval_ms: int = Field(
-        default=60000,
-        description="Metrics export interval in milliseconds",
-        ge=1000
+        default=60000, description="Metrics export interval in milliseconds", ge=1000
     )
     otel_traces_sample_rate: float = Field(
-        default=1.0,
-        ge=0.0,
-        le=1.0,
-        description="Trace sampling rate (0.0 to 1.0)"
+        default=1.0, ge=0.0, le=1.0, description="Trace sampling rate (0.0 to 1.0)"
     )
 
     # Connection settings
-    otel_otlp_insecure: bool = Field(
-        default=True,
-        description="Use insecure connection (no TLS)"
-    )
+    otel_otlp_insecure: bool = Field(default=True, description="Use insecure connection (no TLS)")
 
     # Grafana Cloud Configuration
     grafana_cloud_api_token: str | None = Field(
-        default=None,
-        description="Grafana Cloud API token for authentication"
+        default=None, description="Grafana Cloud API token for authentication"
     )
     grafana_cloud_instance_id: str | None = Field(
-        default=None,
-        description="Grafana Cloud instance ID"
+        default=None, description="Grafana Cloud instance ID"
     )
 
     model_config = SettingsConfigDict(

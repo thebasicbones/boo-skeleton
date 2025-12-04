@@ -34,9 +34,13 @@ class TestMetricsInstrumentor:
         """Create a MetricsInstrumentor instance with mock meter."""
         instrumentor = MetricsInstrumentor(mock_meter)
         # Reset mock call counts after initialization
-        for instrument in [instrumentor.operation_duration, instrumentor.operation_count,
-                          instrumentor.operation_errors, instrumentor.resources_total,
-                          instrumentor.cascade_delete_count]:
+        for instrument in [
+            instrumentor.operation_duration,
+            instrumentor.operation_count,
+            instrumentor.operation_errors,
+            instrumentor.resources_total,
+            instrumentor.cascade_delete_count,
+        ]:
             instrument.reset_mock()
         return instrumentor
 
@@ -97,9 +101,7 @@ class TestMetricsInstrumentor:
     def test_record_operation_complete_with_additional_attributes(self, instrumentor):
         """Test recording operation with additional attributes."""
         instrumentor.record_operation_complete(
-            "create", "mongodb", 0.050, "success",
-            http_status_code=201,
-            resource_id="res_123"
+            "create", "mongodb", 0.050, "success", http_status_code=201, resource_id="res_123"
         )
 
         # Verify additional attributes are included
@@ -135,9 +137,7 @@ class TestMetricsInstrumentor:
         """Test recording operation error with duration."""
         duration = 0.030  # 30ms
 
-        instrumentor.record_operation_error(
-            "create", "mongodb", "validation", duration=duration
-        )
+        instrumentor.record_operation_error("create", "mongodb", "validation", duration=duration)
 
         # Verify duration was recorded
         instrumentor.operation_duration.record.assert_called_once()
@@ -147,9 +147,7 @@ class TestMetricsInstrumentor:
     def test_record_operation_error_with_additional_attributes(self, instrumentor):
         """Test recording error with additional attributes."""
         instrumentor.record_operation_error(
-            "create", "mongodb", "validation",
-            http_status_code=422,
-            field="name"
+            "create", "mongodb", "validation", http_status_code=422, field="name"
         )
 
         # Verify additional attributes are included

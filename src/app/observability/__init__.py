@@ -68,11 +68,13 @@ def init_observability(settings: ObservabilitySettings) -> None:
         logger.info("Initializing OpenTelemetry observability...")
 
         # Create resource with service information
-        resource = Resource.create({
-            "service.name": settings.service_name,
-            "service.version": settings.service_version,
-            "deployment.environment": settings.deployment_environment,
-        })
+        resource = Resource.create(
+            {
+                "service.name": settings.service_name,
+                "service.version": settings.service_version,
+                "deployment.environment": settings.deployment_environment,
+            }
+        )
 
         # Initialize metrics provider
         _initialize_metrics(settings, resource)
@@ -259,11 +261,7 @@ def observability_error_handler(operation: str, **context: Any):
     try:
         yield
     except Exception as e:
-        logger.error(
-            f"Observability error in {operation}: {e}",
-            extra=context,
-            exc_info=True
-        )
+        logger.error(f"Observability error in {operation}: {e}", extra=context, exc_info=True)
         # Don't re-raise - allow application to continue
 
 
