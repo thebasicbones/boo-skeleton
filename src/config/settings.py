@@ -81,7 +81,7 @@ class Settings(BaseSettings):
         default="1.0.0",
         description="Service version"
     )
-    
+
     # OTLP Endpoints
     otel_otlp_endpoint: str = Field(
         default="http://localhost:4317",
@@ -99,7 +99,7 @@ class Settings(BaseSettings):
         default=None,
         description="Separate OTLP endpoint for logs (optional)"
     )
-    
+
     # Export Configuration
     otel_metrics_export_interval_ms: int = Field(
         default=60000,
@@ -112,13 +112,13 @@ class Settings(BaseSettings):
         le=1.0,
         description="Trace sampling rate (0.0 to 1.0)"
     )
-    
+
     # Connection settings
     otel_otlp_insecure: bool = Field(
         default=True,
         description="Use insecure connection (no TLS)"
     )
-    
+
     # Grafana Cloud Configuration
     grafana_cloud_api_token: str | None = Field(
         default=None,

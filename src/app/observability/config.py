@@ -5,17 +5,22 @@ This module provides the ObservabilitySettings model that encapsulates
 all configuration needed for metrics, traces, and logs collection and export.
 """
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from src.app.config import Settings
 
 
 class ObservabilitySettings(BaseModel):
     """
     OpenTelemetry configuration settings.
-    
+
     This model defines all configuration parameters for observability,
     including service identification, OTLP endpoints, export intervals,
     and sampling rates.
-    
+
     Attributes:
         otel_enabled: Enable/disable observability features
         service_name: Service name for telemetry identification
@@ -31,13 +36,13 @@ class ObservabilitySettings(BaseModel):
         traces_sample_rate: Trace sampling rate (0.0 to 1.0)
         otlp_insecure: Use insecure connection (no TLS)
     """
-    
+
     # Enable/disable observability
     otel_enabled: bool = Field(
         default=True,
         description="Enable OpenTelemetry observability"
     )
-    
+
     # Service identification
     service_name: str = Field(
         default="fastapi-crud-backend",
@@ -51,7 +56,7 @@ class ObservabilitySettings(BaseModel):
         default="development",
         description="Deployment environment (development, staging, production)"
     )
-    
+
     # OTLP Endpoints
     otlp_endpoint: str = Field(
         default="http://localhost:4317",
@@ -69,7 +74,7 @@ class ObservabilitySettings(BaseModel):
         default=None,
         description="Separate OTLP endpoint for logs (optional)"
     )
-    
+
     # Export configuration
     metrics_export_interval_ms: int = Field(
         default=60000,
@@ -86,7 +91,7 @@ class ObservabilitySettings(BaseModel):
         description="Batch size for log export",
         ge=1
     )
-    
+
     # Sampling
     traces_sample_rate: float = Field(
         default=1.0,
@@ -94,29 +99,29 @@ class ObservabilitySettings(BaseModel):
         le=1.0,
         description="Trace sampling rate (0.0 to 1.0, 1.0 = 100%)"
     )
-    
+
     # Connection settings
     otlp_insecure: bool = Field(
         default=True,
         description="Use insecure connection (no TLS) - set to False in production"
     )
-    
+
     model_config = {
         "frozen": False,
         "extra": "forbid",
     }
-    
+
     @classmethod
     def from_settings(cls, settings: "Settings") -> "ObservabilitySettings":
         """
         Create ObservabilitySettings from application Settings.
-        
+
         This factory method extracts observability-related configuration
         from the main application settings object.
-        
+
         Args:
             settings: Application settings instance
-            
+
         Returns:
             ObservabilitySettings instance
         """
@@ -133,29 +138,29 @@ class ObservabilitySettings(BaseModel):
             traces_sample_rate=settings.otel_traces_sample_rate,
             otlp_insecure=settings.otel_otlp_insecure,
         )
-    
+
     def get_metrics_endpoint(self) -> str:
         """
         Get the metrics endpoint, falling back to default OTLP endpoint.
-        
+
         Returns:
             Metrics endpoint URL
         """
         return self.otlp_metrics_endpoint or self.otlp_endpoint
-    
+
     def get_traces_endpoint(self) -> str:
         """
         Get the traces endpoint, falling back to default OTLP endpoint.
-        
+
         Returns:
             Traces endpoint URL
         """
         return self.otlp_traces_endpoint or self.otlp_endpoint
-    
+
     def get_logs_endpoint(self) -> str:
         """
         Get the logs endpoint, falling back to default OTLP endpoint.
-        
+
         Returns:
             Logs endpoint URL
         """

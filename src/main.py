@@ -11,7 +11,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from app.database_factory import close_database, init_database
 from app.error_handlers import register_exception_handlers
@@ -43,7 +42,7 @@ async def lifespan(app: FastAPI):
     """
     # Startup: Initialize observability and database
     logger.info("Starting up application...")
-    
+
     # Initialize OpenTelemetry observability
     try:
         init_observability(observability_settings)
@@ -51,7 +50,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to initialize observability: {e}", exc_info=True)
         # Continue without observability
-    
+
     # Initialize database
     try:
         await init_database()
@@ -65,7 +64,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down application...")
     await close_database()
-    
+
     # Shutdown observability
     try:
         shutdown_observability()
