@@ -30,8 +30,9 @@ echo "Step 1: Starting Prometheus"
 echo "------------------------------------------"
 # Copy prometheus config to Homebrew location
 PROM_CONFIG_DIR="/opt/homebrew/etc"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -d "$PROM_CONFIG_DIR" ]; then
-    cp prometheus.yml "$PROM_CONFIG_DIR/prometheus.yml"
+    cp "$SCRIPT_DIR/prometheus.yml" "$PROM_CONFIG_DIR/prometheus.yml"
     echo "✓ Copied prometheus.yml to $PROM_CONFIG_DIR"
 fi
 
@@ -48,17 +49,19 @@ echo ""
 
 echo "Step 3: Starting OpenTelemetry Collector"
 echo "------------------------------------------"
-if [ ! -f "otel-collector-config.yaml" ]; then
+if [ ! -f "$SCRIPT_DIR/otel-collector-config.yaml" ]; then
     echo "❌ otel-collector-config.yaml not found!"
     exit 1
 fi
 
 echo "Starting OTEL Collector in background..."
-nohup otelcol-contrib --config=otel-collector-config.yaml > otel-collector.log 2>&1 &
+cd "$SCRIPT_DIR"
+nohup ./otelcol-contrib --config=otel-collector-config.yaml > otel-collector.log 2>&1 &
 OTEL_PID=$!
 echo $OTEL_PID > otel-collector.pid
+cd - > /dev/null
 echo "✓ OTEL Collector started (PID: $OTEL_PID)"
-echo "  Logs: tail -f otel-collector.log"
+echo "  Logs: tail -f observability/otel-collector.log"
 echo "  Metrics endpoint: http://localhost:8889/metrics"
 echo ""
 
@@ -101,7 +104,7 @@ echo "                   http://localhost:4318 (HTTP)"
 echo ""
 echo "Next Steps:"
 echo "  1. Test the setup:"
-echo "     python test_local_grafana.py"
+echo "     python observability/test_metrics_endpoint.py"
 echo ""
 echo "  2. Configure Grafana data source:"
 echo "     - Go to http://localhost:3000"
@@ -109,8 +112,8 @@ echo "     - Login with admin/admin"
 echo "     - Add Prometheus data source: http://localhost:9090"
 echo ""
 echo "  3. Start your FastAPI app:"
-echo "     cd src && uvicorn app.main:app --reload"
+echo "     python src/main.py"
 echo ""
 echo "To stop services:"
-echo "  ./stop_local_observability.sh"
+echo "  ./observability/stop_local_observability.sh"
 echo ""
