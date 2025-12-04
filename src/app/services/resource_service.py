@@ -1,4 +1,5 @@
 """Resource Service for business logic and coordination"""
+
 from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -196,9 +197,7 @@ class ResourceService:
                     "Invalid dependency: resource not found", {"dependency_id": dep_id}
                 )
 
-    async def _validate_and_check_cycles(
-        self, resource_id: str, dependencies: list[str]
-    ) -> None:
+    async def _validate_and_check_cycles(self, resource_id: str, dependencies: list[str]) -> None:
         """
         Validate dependencies exist and check for circular dependencies.
 

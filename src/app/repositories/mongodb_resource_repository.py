@@ -1,4 +1,5 @@
 """MongoDB resource repository for database operations"""
+
 import logging
 import re
 from datetime import UTC, datetime
@@ -127,14 +128,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 "Failed to retrieve resources due to connection error",
                 error_type="connection",
-                details=str(e)
+                details=str(e),
             )
         except ExecutionTimeout as e:
             logger.error(f"MongoDB timeout in get_all: {e}")
             raise DatabaseError(
                 "Database operation timed out while retrieving resources",
                 error_type="timeout",
-                details="operation=get_all"
+                details="operation=get_all",
             )
         except Exception as e:
             logger.error(f"Unexpected error in get_all: {e}")
@@ -158,14 +159,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 f"Failed to retrieve resource {resource_id} due to connection error",
                 error_type="connection",
-                details=str(e)
+                details=str(e),
             )
         except ExecutionTimeout as e:
             logger.error(f"MongoDB timeout in get_by_id: {e}")
             raise DatabaseError(
                 f"Database operation timed out while retrieving resource {resource_id}",
                 error_type="timeout",
-                details="operation=get_by_id"
+                details="operation=get_by_id",
             )
         except Exception as e:
             logger.error(f"Unexpected error in get_by_id: {e}")
@@ -209,7 +210,7 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 f"Resource with ID {document['_id']} already exists",
                 error_type="duplicate",
-                details="Resource with this ID already exists"
+                details="Resource with this ID already exists",
             )
         except WriteError as e:
             logger.error(f"MongoDB write error in create: {e}")
@@ -222,14 +223,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 "Failed to create resource due to connection error",
                 error_type="connection",
-                details=str(e)
+                details=str(e),
             )
         except ExecutionTimeout as e:
             logger.error(f"MongoDB timeout in create: {e}")
             raise DatabaseError(
                 "Database operation timed out while creating resource",
                 error_type="timeout",
-                details="operation=create"
+                details="operation=create",
             )
         except Exception as e:
             logger.error(f"Unexpected error in create: {e}")
@@ -288,14 +289,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 f"Failed to update resource {resource_id} due to connection error",
                 error_type="connection",
-                details=str(e)
+                details=str(e),
             )
         except ExecutionTimeout as e:
             logger.error(f"MongoDB timeout in update: {e}")
             raise DatabaseError(
                 f"Database operation timed out while updating resource {resource_id}",
                 error_type="timeout",
-                details="operation=update"
+                details="operation=update",
             )
         except Exception as e:
             logger.error(f"Unexpected error in update: {e}")
@@ -350,14 +351,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 f"Failed to delete resource {resource_id} due to connection error",
                 error_type="connection",
-                details=str(e)
+                details=str(e),
             )
         except ExecutionTimeout as e:
             logger.error(f"MongoDB timeout in delete: {e}")
             raise DatabaseError(
                 f"Database operation timed out while deleting resource {resource_id}",
                 error_type="timeout",
-                details="operation=delete"
+                details="operation=delete",
             )
         except Exception as e:
             logger.error(f"Unexpected error in delete: {e}")
@@ -434,14 +435,14 @@ class MongoDBResourceRepository(BaseResourceRepository):
             raise DatabaseError(
                 "Failed to search resources due to connection error",
                 error_type="connection",
-                details=str(e)
+                details=str(e),
             )
         except ExecutionTimeout as e:
             logger.error(f"MongoDB timeout in search: {e}")
             raise DatabaseError(
                 "Database operation timed out while searching resources",
                 error_type="timeout",
-                details="operation=search"
+                details="operation=search",
             )
         except Exception as e:
             logger.error(f"Unexpected error in search: {e}")

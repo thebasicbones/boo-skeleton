@@ -1,4 +1,5 @@
 """Topological Sort Service for dependency ordering and cycle detection"""
+
 from collections import deque
 
 from app.exceptions import CircularDependencyError

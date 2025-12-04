@@ -1,4 +1,5 @@
 """Tests for TopologicalSortService"""
+
 import pytest
 
 from app.services.topological_sort_service import CircularDependencyError, TopologicalSortService

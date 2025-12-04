@@ -6,6 +6,7 @@ Validates: Requirements 8.4
 This module tests that the frontend displays all relevant resource attributes
 (id, name, description, dependencies) when resources are rendered.
 """
+
 import os
 from html.parser import HTMLParser
 

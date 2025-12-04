@@ -6,6 +6,7 @@ Validates: Requirements 6.2
 This test verifies that when MongoDB operations fail due to data validation errors,
 the application returns an HTTP 400 Bad Request response with details about the validation failure.
 """
+
 from datetime import UTC
 from unittest.mock import AsyncMock, patch
 

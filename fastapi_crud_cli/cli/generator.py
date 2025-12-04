@@ -50,16 +50,16 @@ class ProjectGenerator:
 
             # Create directory structure
             created_dirs = self.create_directory_structure(output_dir, config)
-            
+
             # Generate source files
             source_files = self.generate_source_files(output_dir, config)
-            
+
             # Generate configuration files
             config_files = self.generate_config_files(output_dir, config)
-            
+
             # Generate documentation
             doc_files = self.generate_documentation(output_dir, config)
-            
+
             # Copy static assets if requested
             static_files = []
             if config.get("include_static", False):
@@ -68,9 +68,7 @@ class ProjectGenerator:
             # Collect all created files
             all_files = source_files + config_files + doc_files + static_files
 
-            self.output.display_success(
-                f"Project '{config['project_name']}' created successfully!"
-            )
+            self.output.display_success(f"Project '{config['project_name']}' created successfully!")
 
             # Display file tree
             if all_files:
@@ -87,7 +85,7 @@ class ProjectGenerator:
             # Setup virtual environment and install dependencies
             self.console.print()
             self.output.display_progress("Setting up virtual environment...")
-            
+
             venv_success = self._setup_virtual_environment(output_dir)
             if not venv_success:
                 self.output.display_warning(
@@ -95,11 +93,11 @@ class ProjectGenerator:
                 )
             else:
                 self.output.display_success("Virtual environment created")
-                
+
                 # Install dependencies
                 self.output.display_progress("Installing dependencies (this may take a moment)...")
                 install_success = self._install_dependencies(output_dir)
-                
+
                 if not install_success:
                     self.output.display_warning(
                         "Dependency installation failed. You can install them manually with: pip install -r requirements.txt"
@@ -110,15 +108,10 @@ class ProjectGenerator:
             return True
 
         except Exception as e:
-            self.output.display_error(
-                "Project generation failed",
-                str(e)
-            )
+            self.output.display_error("Project generation failed", str(e))
             return False
 
-    def create_directory_structure(
-        self, base_dir: Path, config: dict[str, Any]
-    ) -> list[Path]:
+    def create_directory_structure(self, base_dir: Path, config: dict[str, Any]) -> list[Path]:
         """
         Create all necessary directories for the project.
 
@@ -157,9 +150,7 @@ class ProjectGenerator:
 
         return created_dirs
 
-    def generate_source_files(
-        self, base_dir: Path, config: dict[str, Any]
-    ) -> list[Path]:
+    def generate_source_files(self, base_dir: Path, config: dict[str, Any]) -> list[Path]:
         """
         Generate Python source files using templates.
 
@@ -185,9 +176,7 @@ class ProjectGenerator:
 
         return created_files
 
-    def generate_config_files(
-        self, base_dir: Path, config: dict[str, Any]
-    ) -> list[Path]:
+    def generate_config_files(self, base_dir: Path, config: dict[str, Any]) -> list[Path]:
         """
         Generate configuration files (.env, pyproject.toml, etc.).
 
@@ -207,9 +196,7 @@ class ProjectGenerator:
 
         return created_files
 
-    def generate_documentation(
-        self, base_dir: Path, config: dict[str, Any]
-    ) -> list[Path]:
+    def generate_documentation(self, base_dir: Path, config: dict[str, Any]) -> list[Path]:
         """
         Generate documentation files (README, etc.).
 
@@ -223,9 +210,7 @@ class ProjectGenerator:
         # Documentation is handled by template engine
         return []
 
-    def copy_static_assets(
-        self, base_dir: Path, config: dict[str, Any]
-    ) -> list[Path]:
+    def copy_static_assets(self, base_dir: Path, config: dict[str, Any]) -> list[Path]:
         """
         Copy static files if included.
 
@@ -239,9 +224,7 @@ class ProjectGenerator:
         # Static assets are handled by template engine
         return []
 
-    def _generate_env_file(
-        self, base_dir: Path, config: dict[str, Any]
-    ) -> Path | None:
+    def _generate_env_file(self, base_dir: Path, config: dict[str, Any]) -> Path | None:
         """
         Generate .env file with database-specific configuration.
 
@@ -276,10 +259,7 @@ class ProjectGenerator:
             return env_file
 
         except Exception as e:
-            self.output.display_error(
-                "Failed to generate .env file",
-                str(e)
-            )
+            self.output.display_error("Failed to generate .env file", str(e))
             return None
 
     def _get_template_dir(self) -> Path:
@@ -291,6 +271,7 @@ class ProjectGenerator:
         """
         # Get package directory
         import fastapi_crud_cli
+
         package_dir = Path(fastapi_crud_cli.__file__).parent
         return package_dir / "templates"
 
@@ -303,23 +284,24 @@ class ProjectGenerator:
         """
         # Get package directory
         import fastapi_crud_cli
+
         package_dir = Path(fastapi_crud_cli.__file__).parent
-        
+
         # For development: use src/ directory in workspace root
         workspace_root = package_dir.parent
         src_dir = workspace_root / "src"
         if src_dir.exists() and (src_dir / "app").exists():
             return src_dir
-        
+
         # For installed package: use bundled source files
         bundled_source = package_dir / "source"
         if bundled_source.exists():
             return bundled_source
-        
+
         # Fallback: workspace root (legacy support)
         if (workspace_root / "app").exists():
             return workspace_root
-        
+
         # Last resort: raise error
         raise FileNotFoundError(
             "Source files not found. Please ensure the project is properly set up."
@@ -340,7 +322,7 @@ class ProjectGenerator:
 
         try:
             venv_path = project_dir / "venv"
-            
+
             # Create virtual environment
             result = subprocess.run(
                 [sys.executable, "-m", "venv", str(venv_path)],
@@ -349,11 +331,11 @@ class ProjectGenerator:
                 timeout=60,
                 check=False,
             )
-            
+
             if result.returncode != 0:
                 self.console.print(f"[dim]Error: {result.stderr}[/dim]")
                 return False
-            
+
             return True
 
         except subprocess.TimeoutExpired:
@@ -380,21 +362,21 @@ class ProjectGenerator:
         try:
             venv_path = project_dir / "venv"
             requirements_file = project_dir / "requirements.txt"
-            
+
             if not requirements_file.exists():
                 self.console.print("[dim]requirements.txt not found[/dim]")
                 return False
-            
+
             # Determine pip executable path based on OS
             if sys.platform == "win32":
                 pip_executable = venv_path / "Scripts" / "pip.exe"
             else:
                 pip_executable = venv_path / "bin" / "pip"
-            
+
             if not pip_executable.exists():
                 self.console.print(f"[dim]Pip executable not found at {pip_executable}[/dim]")
                 return False
-            
+
             # Install dependencies
             result = subprocess.run(
                 [str(pip_executable), "install", "-r", str(requirements_file)],
@@ -404,11 +386,11 @@ class ProjectGenerator:
                 check=False,
                 cwd=str(project_dir),
             )
-            
+
             if result.returncode != 0:
                 self.console.print(f"[dim]Error: {result.stderr}[/dim]")
                 return False
-            
+
             return True
 
         except subprocess.TimeoutExpired:

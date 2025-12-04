@@ -7,6 +7,7 @@ Validates: Requirements 9.1, 9.2, 9.4
 This module tests that the frontend correctly handles create form submissions,
 sends proper POST requests to the API, and displays newly created resources.
 """
+
 import os
 
 import pytest

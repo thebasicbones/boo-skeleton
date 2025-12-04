@@ -6,6 +6,7 @@ Validates: Requirements 12.1
 This module tests that the frontend search functionality displays results
 in topological order, where dependencies always appear before dependents.
 """
+
 import os
 
 import pytest

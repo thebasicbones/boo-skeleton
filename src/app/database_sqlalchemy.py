@@ -1,4 +1,5 @@
 """SQLAlchemy database connection and session management"""
+
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool

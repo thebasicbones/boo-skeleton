@@ -1,4 +1,5 @@
 """Global exception handlers for FastAPI application"""
+
 import logging
 
 from fastapi import Request, status
@@ -107,12 +108,22 @@ def register_exception_handlers(app):
         if log_level == "error":
             logger.error(
                 log_message,
-                extra={"error_type": exc.error_type, "message": exc.message, "details": exc.details, "path": request.url.path},
+                extra={
+                    "error_type": exc.error_type,
+                    "message": exc.message,
+                    "details": exc.details,
+                    "path": request.url.path,
+                },
             )
         else:
             logger.warning(
                 log_message,
-                extra={"error_type": exc.error_type, "message": exc.message, "details": exc.details, "path": request.url.path},
+                extra={
+                    "error_type": exc.error_type,
+                    "message": exc.message,
+                    "details": exc.details,
+                    "path": request.url.path,
+                },
             )
 
         # Map error_type to legacy error names for backward compatibility

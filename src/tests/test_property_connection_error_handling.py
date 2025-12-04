@@ -6,6 +6,7 @@ Validates: Requirements 6.1
 This test verifies that when MongoDB operations fail due to connection issues,
 the application returns an appropriate HTTP error response and logs the underlying error.
 """
+
 from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -360,7 +361,7 @@ async def test_api_returns_503_on_connection_error():
             side_effect=DatabaseError(
                 "Failed to retrieve resources due to connection error",
                 error_type="connection",
-                details="Connection lost"
+                details="Connection lost",
             )
         )
         mock_get_repo.return_value = mock_repo

@@ -30,12 +30,7 @@ class CircularDependencyError(Exception):
 class DatabaseError(Exception):
     """Database operation error with optional context"""
 
-    def __init__(
-        self,
-        message: str,
-        error_type: str = "general",
-        details: str | None = None
-    ):
+    def __init__(self, message: str, error_type: str = "general", details: str | None = None):
         self.message = message
         self.error_type = error_type  # "connection", "timeout", "duplicate", "general"
         self.details = details

@@ -7,6 +7,7 @@ This test verifies that creating a resource and then immediately retrieving it
 returns a resource with identical field values (except for system-generated timestamps)
 for both SQLAlchemy and MongoDB backends.
 """
+
 import os
 from datetime import datetime
 
@@ -36,9 +37,11 @@ def resource_to_dict(resource):
         "id": resource.id,
         "name": resource.name,
         "description": resource.description,
-        "dependencies": [dep.id for dep in resource.dependencies]
-        if hasattr(resource, "dependencies") and resource.dependencies
-        else [],
+        "dependencies": (
+            [dep.id for dep in resource.dependencies]
+            if hasattr(resource, "dependencies") and resource.dependencies
+            else []
+        ),
         "created_at": resource.created_at,
         "updated_at": resource.updated_at,
     }

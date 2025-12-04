@@ -6,6 +6,7 @@ Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 This test establishes a baseline for the SQLAlchemy repository implementation
 to ensure it correctly implements the BaseResourceRepository interface.
 """
+
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st

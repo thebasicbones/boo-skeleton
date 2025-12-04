@@ -1,4 +1,5 @@
 """Abstract base repository interface for resource operations"""
+
 from abc import ABC, abstractmethod
 
 from app.schemas import ResourceCreate, ResourceUpdate
