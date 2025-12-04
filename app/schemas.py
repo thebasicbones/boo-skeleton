@@ -117,45 +117,6 @@ class ResourceResponse(BaseModel):
     }
 
 
-class ResourceList(BaseModel):
-    """Schema for list of resources with metadata"""
-
-    resources: list[ResourceResponse] = Field(default_factory=list, description="List of resources")
-    total: int = Field(..., description="Total number of resources")
-    topologically_sorted: bool = Field(
-        default=False, description="Whether the list is topologically sorted"
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "resources": [
-                        {
-                            "id": "uuid-1",
-                            "name": "Database",
-                            "description": "PostgreSQL database",
-                            "dependencies": [],
-                            "created_at": "2024-01-15T10:30:00Z",
-                            "updated_at": "2024-01-15T10:30:00Z",
-                        }
-                    ],
-                    "total": 1,
-                    "topologically_sorted": True,
-                }
-            ]
-        }
-    }
-
-
-class ErrorDetail(BaseModel):
-    """Schema for detailed error information"""
-
-    field: str | None = Field(None, description="Field that caused the error")
-    message: str = Field(..., description="Error message for this field")
-    type: str | None = Field(None, description="Error type")
-
-
 class ErrorResponse(BaseModel):
     """Schema for consistent error responses"""
 

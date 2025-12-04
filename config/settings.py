@@ -40,9 +40,6 @@ class Settings(BaseSettings):
     mongodb_database: str | None = Field(
         default=None, description="MongoDB database name (required for MongoDB)"
     )
-    mongodb_username: str | None = Field(default=None, description="MongoDB username (optional)")
-    mongodb_password: str | None = Field(default=None, description="MongoDB password (optional)")
-    mongodb_auth_source: str = Field(default="admin", description="MongoDB authentication database")
     mongodb_timeout: int = Field(
         default=5000, description="MongoDB connection timeout in milliseconds"
     )
@@ -69,11 +66,6 @@ class Settings(BaseSettings):
         description="Secret key for security features",
     )
     allowed_origins: list[str] = Field(default=["*"], description="CORS allowed origins")
-
-    # CORS Configuration (legacy support)
-    cors_origins: list[str] | None = Field(
-        default=None, description="Legacy CORS origins configuration"
-    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -108,10 +100,6 @@ class Settings(BaseSettings):
         """Initialize settings and perform post-validation checks."""
         super().__init__(**kwargs)
 
-        # If cors_origins is set (legacy), use it for allowed_origins
-        if self.cors_origins is not None:
-            self.allowed_origins = self.cors_origins
-
         # Validate MongoDB-specific requirements
         if self.database_type == "mongodb" and not self.mongodb_database:
             raise ValueError("mongodb_database is required when database_type is 'mongodb'")
@@ -139,18 +127,6 @@ class Settings(BaseSettings):
         """
         return self.database_url
 
-    def is_development(self) -> bool:
-        """Check if running in development environment."""
-        return self.environment == "development"
-
-    def is_staging(self) -> bool:
-        """Check if running in staging environment."""
-        return self.environment == "staging"
-
-    def is_production(self) -> bool:
-        """Check if running in production environment."""
-        return self.environment == "production"
-
 
 # Global settings instance
 _settings: Settings | None = None
@@ -170,19 +146,4 @@ def get_settings() -> Settings:
     if _settings is None:
         _settings = Settings()
         logger.info(f"Settings loaded for environment: {_settings.environment}")
-    return _settings
-
-
-def reload_settings() -> Settings:
-    """
-    Reload settings from environment variables.
-
-    This function is primarily useful for testing purposes.
-
-    Returns:
-        Settings: Newly loaded settings instance
-    """
-    global _settings
-    _settings = Settings()
-    logger.info(f"Settings reloaded for environment: {_settings.environment}")
     return _settings

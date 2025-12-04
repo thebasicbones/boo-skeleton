@@ -152,20 +152,3 @@ class TopologicalSortService:
 
         # Try to sort - will raise CircularDependencyError if cycle exists
         TopologicalSortService.topological_sort(temp_resources)
-
-    @staticmethod
-    def has_cycle(resources: list[dict]) -> bool:
-        """
-        Check if the given resources contain a circular dependency.
-
-        Args:
-            resources: List of resource dictionaries
-
-        Returns:
-            True if a cycle exists, False otherwise
-        """
-        try:
-            TopologicalSortService.topological_sort(resources)
-            return False
-        except CircularDependencyError:
-            return True
