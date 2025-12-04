@@ -13,7 +13,7 @@ from app.database_factory import (
     get_repository,
     init_database,
 )
-from app.exceptions import DatabaseConnectionError
+from app.exceptions import DatabaseError
 from app.repositories.mongodb_resource_repository import MongoDBResourceRepository
 from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
 from config.settings import Settings
@@ -71,7 +71,7 @@ class TestGetDatabaseType:
         mock_settings = MagicMock()
         mock_settings.database_type = "postgres"
         with patch("app.database_factory.get_settings", return_value=mock_settings):
-            with pytest.raises(DatabaseConnectionError) as exc_info:
+            with pytest.raises(DatabaseError) as exc_info:
                 get_database_type()
 
             assert "Invalid DATABASE_TYPE" in str(exc_info.value)
@@ -103,7 +103,7 @@ class TestGetRepository:
         """Test that invalid database connection type raises error"""
         invalid_db = "not a database connection"
 
-        with pytest.raises(DatabaseConnectionError) as exc_info:
+        with pytest.raises(DatabaseError) as exc_info:
             get_repository(invalid_db)
 
         assert "Unknown database connection type" in str(exc_info.value)
@@ -146,7 +146,7 @@ class TestInitDatabase:
             ) as mock_init:
                 mock_init.side_effect = Exception("Connection failed")
 
-                with pytest.raises(DatabaseConnectionError) as exc_info:
+                with pytest.raises(DatabaseError) as exc_info:
                     await init_database()
 
                 assert "Database initialization failed" in str(exc_info.value)

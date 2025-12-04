@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exceptions import DatabaseConnectionError
+from app.exceptions import DatabaseError
 from app.repositories.base_resource_repository import BaseResourceRepository
 from app.repositories.mongodb_resource_repository import MongoDBResourceRepository
 from app.repositories.sqlalchemy_resource_repository import SQLAlchemyResourceRepository
@@ -32,8 +32,9 @@ def get_database_type() -> str:
     db_type = settings.database_type.lower()
 
     if db_type not in [DATABASE_TYPE_SQLITE, DATABASE_TYPE_MONGODB]:
-        raise DatabaseConnectionError(
+        raise DatabaseError(
             f"Invalid DATABASE_TYPE: {db_type}. Must be 'sqlite' or 'mongodb'",
+            error_type="connection",
             details=f"Configured value: {db_type}",
         )
 
@@ -54,7 +55,7 @@ async def get_db() -> AsyncGenerator[AsyncSession | AsyncIOMotorDatabase, None]:
             or database instance for MongoDB
 
     Raises:
-        DatabaseConnectionError: If database type is invalid or connection fails
+        DatabaseError: If database type is invalid or connection fails
     """
     db_type = get_database_type()
 
@@ -73,8 +74,9 @@ async def get_db() -> AsyncGenerator[AsyncSession | AsyncIOMotorDatabase, None]:
             yield db
 
     else:
-        raise DatabaseConnectionError(
+        raise DatabaseError(
             f"Unsupported database type: {db_type}",
+            error_type="general",
             details="This should not happen if get_database_type() validation works",
         )
 
@@ -91,7 +93,7 @@ def get_repository(db: AsyncSession | AsyncIOMotorDatabase) -> BaseResourceRepos
         BaseResourceRepository: Appropriate repository implementation
 
     Raises:
-        DatabaseConnectionError: If database type cannot be determined
+        DatabaseError: If database type cannot be determined
     """
     # Determine database type based on the connection object type
     if isinstance(db, AsyncSession):
@@ -103,8 +105,9 @@ def get_repository(db: AsyncSession | AsyncIOMotorDatabase) -> BaseResourceRepos
         return MongoDBResourceRepository(db)
 
     else:
-        raise DatabaseConnectionError(
+        raise DatabaseError(
             f"Unknown database connection type: {type(db).__name__}",
+            error_type="connection",
             details=f"Expected AsyncSession or AsyncIOMotorDatabase, got {type(db)}",
         )
 
@@ -119,7 +122,7 @@ async def init_database() -> None:
     - Creates tables/indexes as needed
 
     Raises:
-        DatabaseConnectionError: If initialization fails
+        DatabaseError: If initialization fails
     """
     db_type = get_database_type()
 
@@ -139,19 +142,22 @@ async def init_database() -> None:
             logger.info("MongoDB database initialized successfully")
 
         else:
-            raise DatabaseConnectionError(
+            raise DatabaseError(
                 f"Cannot initialize unsupported database type: {db_type}",
+                error_type="general",
                 details="This should not happen if get_database_type() validation works",
             )
 
-    except DatabaseConnectionError:
-        # Re-raise database connection errors as-is
+    except DatabaseError:
+        # Re-raise database errors as-is
         raise
 
     except Exception as e:
         logger.error(f"Failed to initialize {db_type} database: {e}", exc_info=True)
-        raise DatabaseConnectionError(
-            f"Database initialization failed for {db_type}", details=str(e)
+        raise DatabaseError(
+            f"Database initialization failed for {db_type}",
+            error_type="connection",
+            details=str(e)
         )
 
 

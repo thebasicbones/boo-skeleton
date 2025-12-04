@@ -5,7 +5,38 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 
-class ResourceCreate(BaseModel):
+class ResourceBase(BaseModel):
+    """Base schema with shared validation logic for resource operations"""
+
+    @field_validator("name", check_fields=False)
+    @classmethod
+    def validate_name(cls, v: str | None) -> str | None:
+        """Validate that name is not just whitespace"""
+        if v is not None:
+            if not v.strip():
+                raise ValueError("Name cannot be empty or whitespace only")
+            return v.strip()
+        return v
+
+    @field_validator("description", check_fields=False)
+    @classmethod
+    def validate_description(cls, v: str | None) -> str | None:
+        """Strip whitespace from description"""
+        if v is not None:
+            stripped = v.strip()
+            return stripped if stripped else None
+        return v
+
+    @field_validator("dependencies", check_fields=False)
+    @classmethod
+    def validate_dependencies(cls, v: list[str] | None) -> list[str] | None:
+        """Validate that dependencies list contains unique IDs"""
+        if v is not None and len(v) != len(set(v)):
+            raise ValueError("Dependencies must be unique")
+        return v
+
+
+class ResourceCreate(ResourceBase):
     """Schema for creating a new resource"""
 
     name: str = Field(
@@ -17,31 +48,6 @@ class ResourceCreate(BaseModel):
     dependencies: list[str] = Field(
         default_factory=list, description="List of resource IDs this resource depends on"
     )
-
-    @field_validator("name")
-    @classmethod
-    def name_must_not_be_empty(cls, v: str) -> str:
-        """Validate that name is not just whitespace"""
-        if not v or not v.strip():
-            raise ValueError("Name cannot be empty or whitespace only")
-        return v.strip()
-
-    @field_validator("description")
-    @classmethod
-    def description_strip_whitespace(cls, v: str | None) -> str | None:
-        """Strip whitespace from description"""
-        if v is not None:
-            stripped = v.strip()
-            return stripped if stripped else None
-        return v
-
-    @field_validator("dependencies")
-    @classmethod
-    def dependencies_must_be_unique(cls, v: list[str]) -> list[str]:
-        """Validate that dependencies list contains unique IDs"""
-        if len(v) != len(set(v)):
-            raise ValueError("Dependencies must be unique")
-        return v
 
     model_config = {
         "json_schema_extra": {
@@ -56,7 +62,7 @@ class ResourceCreate(BaseModel):
     }
 
 
-class ResourceUpdate(BaseModel):
+class ResourceUpdate(ResourceBase):
     """Schema for updating an existing resource"""
 
     name: str | None = Field(
@@ -68,33 +74,6 @@ class ResourceUpdate(BaseModel):
     dependencies: list[str] | None = Field(
         None, description="List of resource IDs this resource depends on"
     )
-
-    @field_validator("name")
-    @classmethod
-    def name_must_not_be_empty(cls, v: str | None) -> str | None:
-        """Validate that name is not just whitespace if provided"""
-        if v is not None:
-            if not v.strip():
-                raise ValueError("Name cannot be empty or whitespace only")
-            return v.strip()
-        return v
-
-    @field_validator("description")
-    @classmethod
-    def description_strip_whitespace(cls, v: str | None) -> str | None:
-        """Strip whitespace from description"""
-        if v is not None:
-            stripped = v.strip()
-            return stripped if stripped else None
-        return v
-
-    @field_validator("dependencies")
-    @classmethod
-    def dependencies_must_be_unique(cls, v: list[str] | None) -> list[str] | None:
-        """Validate that dependencies list contains unique IDs if provided"""
-        if v is not None and len(v) != len(set(v)):
-            raise ValueError("Dependencies must be unique")
-        return v
 
     model_config = {
         "json_schema_extra": {
