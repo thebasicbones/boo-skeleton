@@ -1,6 +1,6 @@
 # Implementation Plan: FastAPI CRUD CLI Scaffolding Tool
 
-- [ ] 1. Set up package structure and core dependencies
+- [-] 1. Set up package structure and core dependencies
   - Create package directory structure (fastapi_crud_cli/, cli/, templates/, utils/)
   - Create pyproject.toml with package metadata and dependencies
   - Create MANIFEST.in to include template files in distribution
