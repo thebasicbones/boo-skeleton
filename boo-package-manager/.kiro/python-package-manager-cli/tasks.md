@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [x] 1. Set up project structure and core infrastructure
+- [-] 1. Set up project structure and core infrastructure
   - Create CLI project directory structure with proper Python package layout
   - Set up pyproject.toml with dependencies (click/typer, httpx, rich, pydantic, hypothesis, pytest)
   - Configure development tools (black, ruff, mypy, pytest)
