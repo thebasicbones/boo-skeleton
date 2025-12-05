@@ -7,14 +7,14 @@
   - Create basic CLI entry point with version and help commands
   - _Requirements: 15.1_
 
-- [x] 2. Implement backend API client
-- [x] 2.1 Create BackendClient class with httpx
+- [ ] 2. Implement backend API client
+- [ ] 2.1 Create BackendClient class with httpx
   - Implement async HTTP client with base URL configuration
   - Add authentication header support for API keys
   - Implement connection pooling and timeout handling
   - _Requirements: 9.1, 9.2_
 
-- [x] 2.2 Implement CRUD operations for resources
+- [ ] 2.2 Implement CRUD operations for resources
   - Add create_resource() method (POST /api/resources)
   - Add get_resource() method (GET /api/resources/{id})
   - Add list_resources() method (GET /api/resources)
@@ -22,17 +22,17 @@
   - Add delete_resource() method with cascade support (DELETE /api/resources/{id})
   - _Requirements: 1.1, 2.1, 5.1, 7.1_
 
-- [x] 2.3 Implement search functionality
+- [ ] 2.3 Implement search functionality
   - Add search_resources() method (GET /api/search?q=)
   - Handle empty query (returns all resources in topological order)
   - Parse and return topologically sorted results
   - _Requirements: 6.1, 6.5_
 
-- [x]* 2.4 Write property test for backend client
+- [ ]* 2.4 Write property test for backend client
   - **Property 1: Installation order follows topological sort**
   - **Validates: Requirements 1.4**
 
-- [x]* 2.5 Add error handling for backend client
+- [ ]* 2.5 Add error handling for backend client
   - Handle network errors (connection refused, timeout)
   - Handle HTTP errors (404, 422, 500)
   - Parse CircularDependencyError from backend responses
