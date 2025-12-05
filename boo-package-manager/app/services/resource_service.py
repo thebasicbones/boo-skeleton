@@ -4,7 +4,6 @@ import time
 from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
-# from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database_factory import get_repository
 from app.exceptions import CircularDependencyError, NotFoundError, ValidationError
@@ -16,12 +15,12 @@ from app.services.topological_sort_service import TopologicalSortService
 class ResourceService:
     """Service class for resource business logic"""
 
-    def __init__(self, db: AsyncSession | AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase):
         """
-        Initialize service with database session or database instance.
+        Initialize service with database instance.
 
         Args:
-            db: Database connection (AsyncSession for SQLite or AsyncIOMotorDatabase for MongoDB)
+            db: MongoDB database connection (AsyncIOMotorDatabase)
         """
         self.db = db
         self.repository = get_repository(db)
@@ -32,8 +31,8 @@ class ResourceService:
             meter = get_meter(__name__)
             self.metrics = create_metrics_instrumentor(meter)
 
-        # Determine database type for metrics
-        self.db_type = "mongodb" if hasattr(db, "list_collection_names") else "sqlite"
+        # Database type for metrics
+        self.db_type = "mongodb"
 
     async def create_resource(self, data: ResourceCreate) -> ResourceResponse:
         """

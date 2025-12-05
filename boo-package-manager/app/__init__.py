@@ -1,1 +1,0 @@
-"""FastAPI CRUD Backend Application"""

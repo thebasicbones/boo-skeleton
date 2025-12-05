@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database_factory import init_database, close_database
 from app.routers import resources
-from app.error_handlers import register_error_handlers
+from app.error_handlers import register_exception_handlers
 from config.settings import get_settings
 
 
@@ -43,7 +43,7 @@ app.add_middleware(
 )
 
 # Register error handlers
-register_error_handlers(app)
+register_exception_handlers(app)
 
 # Include routers
 app.include_router(resources.router, prefix="/resources", tags=["resources"])
