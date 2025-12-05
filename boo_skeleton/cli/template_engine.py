@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 
-from fastapi_crud_cli.cli.output import OutputFormatter
+from boo_skeleton.cli.output import OutputFormatter
 
 
 class TemplateEngine:

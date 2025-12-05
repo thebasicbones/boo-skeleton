@@ -324,6 +324,85 @@ class ProjectPrompts:
             "description": description,
         }
 
+    def prompt_observability_config(self) -> dict[str, Any]:
+        """
+        Prompt for observability configuration (OpenTelemetry).
+
+        Asks user whether to enable observability and collects OTEL endpoint configuration.
+
+        Returns:
+            Dictionary containing observability configuration:
+                - otel_enabled: Whether observability is enabled
+                - otel_endpoint: OTLP endpoint URL
+                - otel_insecure: Whether to use insecure connection
+                - metrics_export_interval: Metrics export interval in milliseconds
+                - traces_sample_rate: Trace sampling rate (0.0 to 1.0)
+        """
+        self.console.print()
+        self.console.print("[bold cyan]Observability Configuration[/bold cyan]")
+        self.console.print()
+        self.console.print(
+            "[dim]OpenTelemetry provides metrics, traces, and logs for monitoring[/dim]"
+        )
+        self.console.print()
+
+        otel_enabled = Confirm.ask(
+            "[cyan]❯[/cyan] Enable OpenTelemetry observability?",
+            default=True,
+            console=self.console,
+        )
+
+        if not otel_enabled:
+            return {
+                "otel_enabled": False,
+                "otel_endpoint": "",
+                "otel_insecure": True,
+                "metrics_export_interval": 60000,
+                "traces_sample_rate": 1.0,
+            }
+
+        self.console.print()
+        self.console.print("[dim]Configure OTLP (OpenTelemetry Protocol) endpoint[/dim]")
+        self.console.print()
+
+        # OTLP endpoint
+        otel_endpoint = Prompt.ask(
+            "[cyan]❯[/cyan] OTLP endpoint (gRPC)",
+            default="http://localhost:4317",
+            console=self.console,
+        )
+
+        # Insecure connection (no TLS)
+        otel_insecure = Confirm.ask(
+            "[cyan]❯[/cyan] Use insecure connection (no TLS)?",
+            default=True,
+            console=self.console,
+        )
+
+        # Metrics export interval
+        metrics_interval = Prompt.ask(
+            "[cyan]❯[/cyan] Metrics export interval (milliseconds)",
+            default="10000",
+            console=self.console,
+        )
+
+        # Trace sampling rate
+        self.console.print()
+        self.console.print("[dim]Trace sampling rate (1.0 = 100%, 0.1 = 10%)[/dim]")
+        traces_sample_rate = Prompt.ask(
+            "[cyan]❯[/cyan] Trace sampling rate",
+            default="1.0",
+            console=self.console,
+        )
+
+        return {
+            "otel_enabled": True,
+            "otel_endpoint": otel_endpoint,
+            "otel_insecure": otel_insecure,
+            "metrics_export_interval": int(metrics_interval),
+            "traces_sample_rate": float(traces_sample_rate),
+        }
+
     def prompt_optional_features(self) -> dict[str, bool]:
         """
         Prompt for optional features (examples, dev tools, etc.).

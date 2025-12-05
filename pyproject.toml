@@ -3,17 +3,17 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fastapi-crud-cli"
+name = "boo-skeleton"
 version = "0.1.0"
-description = "A CLI scaffolding tool for generating FastAPI CRUD backend projects with database support (SQLite, MongoDB, PostgreSQL)"
-readme = "CLI_README.md"
+description = "Boo-Skeleton: A CLI tool for generating FastAPI projects with observability, dual database support, and dependency management"
+readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "FastAPI CRUD CLI Contributors", email = "contributors@fastapi-crud-cli.dev"}
+    {name = "Boo-Skeleton Contributors", email = "contributors@boo-skeleton.dev"}
 ]
 maintainers = [
-    {name = "FastAPI CRUD CLI Contributors", email = "contributors@fastapi-crud-cli.dev"}
+    {name = "Boo-Skeleton Contributors", email = "contributors@boo-skeleton.dev"}
 ]
 keywords = [
     "fastapi",
@@ -70,19 +70,19 @@ dev = [
 ]
 
 [project.scripts]
-fastapi-crud = "fastapi_crud_cli.cli.main:cli"
+boo-skeleton = "boo_skeleton.cli.main:cli"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/fastapi-crud-cli"
-Documentation = "https://github.com/yourusername/fastapi-crud-cli#readme"
-Repository = "https://github.com/yourusername/fastapi-crud-cli"
-Issues = "https://github.com/yourusername/fastapi-crud-cli/issues"
+Homepage = "https://github.com/thebasicbones/boo-skeleton"
+Documentation = "https://github.com/thebasicbones/boo-skeleton#readme"
+Repository = "https://github.com/thebasicbones/boo-skeleton"
+Issues = "https://github.com/thebasicbones/boo-skeleton/issues"
 
 [tool.setuptools]
-packages = ["fastapi_crud_cli", "fastapi_crud_cli.cli", "fastapi_crud_cli.utils"]
+packages = ["boo_skeleton", "boo_skeleton.cli", "boo_skeleton.utils"]
 
 [tool.setuptools.package-data]
-fastapi_crud_cli = [
+boo_skeleton = [
     "templates/**/*",
     "templates/project/**/*",
     "templates/static/*",
@@ -119,7 +119,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fastapi_crud_cli"]
+known-first-party = ["boo_skeleton"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -147,8 +147,8 @@ addopts = [
     "--strict-markers",
     "--tb=short",
     "--ignore=src",
-    "--ignore=fastapi_crud_cli/source",
-    "--ignore=fastapi_crud_cli/templates",
+    "--ignore=boo_skeleton/source",
+    "--ignore=boo_skeleton/templates",
 ]
 markers = [
     "property: Property-based tests using Hypothesis",
@@ -157,7 +157,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["fastapi_crud_cli"]
+source = ["boo_skeleton"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",

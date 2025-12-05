@@ -1,22 +1,22 @@
-# FastAPI CRUD CLI
+# Boo-Skeleton 🦴
 
 **⚡ Generate production-ready FastAPI backends in seconds, not hours**
 
-[![PyPI version](https://img.shields.io/pypi/v/fastapi-crud-cli?color=blue&label=PyPI)](https://pypi.org/project/fastapi-crud-cli/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/fastapi-crud-cli?color=blue)](https://pypi.org/project/fastapi-crud-cli/)
+[![PyPI version](https://img.shields.io/pypi/v/boo-skeleton?color=blue&label=PyPI)](https://pypi.org/project/boo-skeleton/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/boo-skeleton?color=blue)](https://pypi.org/project/boo-skeleton/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## What is FastAPI CRUD CLI?
+## What is Boo-Skeleton?
 
-A powerful command-line scaffolding tool that generates complete, production-ready FastAPI projects with your choice of database backend. Stop writing boilerplate—start building features.
+A powerful command-line scaffolding tool that generates complete, production-ready FastAPI projects with observability, dependency management, and your choice of database backend. Stop writing boilerplate—start building features.
 
 **One command. Complete backend. Ready to run.**
 
 ```bash
-pip install fastapi-crud-cli
-fastapi-crud create
+pip install boo-skeleton
+boo-skeleton create
 ```
 
 ---
@@ -24,6 +24,7 @@ fastapi-crud create
 ## ✨ Features
 
 ### Core Features
+
 - **🎨 Interactive CLI** — Beautiful prompts with colors, progress indicators, and formatted output
 - **🗄️ Multi-Database Support** — SQLite, MongoDB, or PostgreSQL—your choice
 - **🏗️ Production Architecture** — Repository pattern, service layer, dependency injection
@@ -32,6 +33,7 @@ fastapi-crud create
 - **📝 Auto Documentation** — Swagger UI and ReDoc included automatically
 
 ### 📊 Topological Sorting & Dependency Management
+
 - **Intelligent Resource Ordering** — Automatically sorts resources based on their dependencies using Kahn's algorithm
 - **Circular Dependency Detection** — Prevents invalid dependency chains before they cause issues
 - **Cascade Delete** — Automatically removes dependent resources when a parent is deleted
@@ -61,7 +63,6 @@ Full observability stack with **metrics**, **logs**, and **traces**:
 ### 📊 Dashboard Integration
 
 Pre-configured observability stack:
-
 - **Grafana Dashboard** — Ready-to-import dashboard for CRUD metrics visualization
 - **Prometheus** — Metrics collection and alerting rules
 - **OpenTelemetry Collector** — Unified telemetry collection pipeline
@@ -74,19 +75,19 @@ Pre-configured observability stack:
 ### Install
 
 ```bash
-pip install fastapi-crud-cli
+pip install boo-skeleton
 ```
 
 Or with pipx for isolated installation:
 
 ```bash
-pipx install fastapi-crud-cli
+pipx install boo-skeleton
 ```
 
 ### Create a Project
 
 ```bash
-fastapi-crud create
+boo-skeleton create
 ```
 
 Follow the interactive prompts to configure your project. The CLI will:
@@ -118,10 +119,10 @@ Visit `http://localhost:8000/docs` to see your API documentation!
 
 ```bash
 # Get info about a specific database
-fastapi-crud info mongodb
+boo-skeleton info mongodb
 
 # List all available options
-fastapi-crud list
+boo-skeleton list
 ```
 
 ---
@@ -181,20 +182,20 @@ Resources can have dependencies on other resources. The topological sort feature
 
 ```
 Resource A (no dependencies)
-    ↓
+↓
 Resource B (depends on A)
-    ↓
+↓
 Resource C (depends on A and B)
 ```
 
 **Key capabilities:**
-
 - **Kahn's Algorithm** — Efficient O(V+E) topological ordering
 - **Cycle Detection** — Identifies and reports circular dependencies with full cycle path
 - **Dependency Validation** — Prevents creation of resources with invalid dependencies
 - **Cascade Deletion** — Removes all dependent resources when a parent is deleted
 
 **Example API response for `/resources/sorted`:**
+
 ```json
 [
   {"id": "database", "name": "PostgreSQL", "dependencies": []},
@@ -240,7 +241,6 @@ JSON-formatted logs with automatic trace correlation:
 ### Distributed Tracing
 
 Full request tracing with configurable sampling:
-
 - Trace context propagation across services
 - Span attributes for operation details
 - Integration with Jaeger, Zipkin, or any OTLP-compatible backend
@@ -275,11 +275,11 @@ cd your-project/observability
 ## 🛠️ CLI Commands
 
 ```bash
-fastapi-crud create      # Create a new project (interactive)
-fastapi-crud list        # List available database backends
-fastapi-crud info <db>   # Get details about a database
-fastapi-crud --version   # Show version
-fastapi-crud --help      # Show help
+boo-skeleton create      # Create a new project (interactive)
+boo-skeleton list        # List available database backends
+boo-skeleton info <db>   # Get details about a database
+boo-skeleton --version   # Show version
+boo-skeleton --help      # Show help
 ```
 
 ---
@@ -306,7 +306,8 @@ OTEL_ENABLED=true
 OTEL_SERVICE_NAME=my-awesome-api
 OTEL_OTLP_ENDPOINT=http://localhost:4317
 OTEL_TRACES_SAMPLE_RATE=1.0
-OTEL_METRICS_EXPORT_INTERVAL_MS=60000
+OTEL_METRICS_EXPORT_INTERVAL_MS=10000
+OTEL_OTLP_INSECURE=true
 ```
 
 ---
@@ -360,13 +361,13 @@ Generated projects follow a clean layered architecture:
 
 ```
 API Layer (Routers)
-    ↓
+↓
 Service Layer (Business Logic + Topological Sort)
-    ↓
+↓
 Repository Layer (Data Access)
-    ↓
+↓
 Database (SQLite / MongoDB / PostgreSQL)
-    ↓
+↓
 Observability (Metrics / Logs / Traces → OTEL Collector → Grafana)
 ```
 
@@ -384,10 +385,10 @@ This separation ensures:
 
 ```bash
 # Use pipx for isolated installation
-pipx install fastapi-crud-cli
+pipx install boo-skeleton
 
 # Or ensure pip scripts are in PATH
-python -m pip install --user fastapi-crud-cli
+python -m pip install --user boo-skeleton
 ```
 
 **Virtual environment creation fails?**
@@ -415,9 +416,9 @@ MIT License
 
 ## 🔗 Links
 
-- **Source Code**: [GitHub Repository](https://github.com/yourusername/fastapi-crud-cli)
-- **Issue Tracker**: [GitHub Issues](https://github.com/yourusername/fastapi-crud-cli/issues)
-- **Changelog**: [CHANGELOG.md](https://github.com/yourusername/fastapi-crud-cli/blob/main/CHANGELOG.md)
+- **Source Code**: [GitHub Repository](https://github.com/thebasicbones/boo-skeleton)
+- **Issue Tracker**: [GitHub Issues](https://github.com/thebasicbones/boo-skeleton/issues)
+- **Changelog**: [CHANGELOG.md](https://github.com/thebasicbones/boo-skeleton/blob/main/CHANGELOG.md)
 
 ---
 

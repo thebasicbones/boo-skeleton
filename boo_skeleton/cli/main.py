@@ -1,21 +1,21 @@
-"""Main CLI entry point for FastAPI CRUD scaffolding tool."""
+"""Main CLI entry point for Boo-Skeleton scaffolding tool."""
 
 import click
 from rich.console import Console
 
-from fastapi_crud_cli.__version__ import __version__
+from boo_skeleton.__version__ import __version__
 
 console = Console()
 
 
 @click.group()
-@click.version_option(version=__version__, prog_name="fastapi-crud")
+@click.version_option(version=__version__, prog_name="boo-skeleton")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
     """
-    FastAPI CRUD Backend Scaffolding Tool.
+    Boo-Skeleton: FastAPI Project Generator.
 
-    Generate new FastAPI projects with customizable database backends
+    Generate new FastAPI projects with observability, customizable database backends,
     and development configurations through an interactive CLI.
     """
     ctx.ensure_object(dict)
@@ -55,6 +55,7 @@ def create(non_interactive: bool) -> None:
         database_type = prompts.prompt_database_type()
         database_config = prompts.prompt_database_config(database_type)
         env_variables = prompts.prompt_environment_variables(database_type)
+        observability_config = prompts.prompt_observability_config()
         metadata = prompts.prompt_project_metadata()
         optional_features = prompts.prompt_optional_features()
 
@@ -65,6 +66,7 @@ def create(non_interactive: bool) -> None:
             "database_type": database_type,
             "database_config": database_config,
             "env_variables": env_variables,
+            "observability": observability_config,
             "author_name": metadata["author_name"],
             "author_email": metadata["author_email"],
             "description": metadata["description"],
@@ -143,7 +145,7 @@ def list() -> None:
     console.print()
     console.print(table)
     console.print()
-    console.print("[dim]Use 'fastapi-crud info <database-type>' for detailed information[/dim]")
+    console.print("[dim]Use 'boo-skeleton info <database-type>' for detailed information[/dim]")
     console.print()
 
 
@@ -177,7 +179,7 @@ def info(database_type: str | None) -> None:
             "Please specify a database type (sqlite, mongodb, or postgresql)",
         )
         console.print()
-        console.print("[dim]Example: fastapi-crud info mongodb[/dim]")
+        console.print("[dim]Example: boo-skeleton info mongodb[/dim]")
         console.print()
         return
 
@@ -274,7 +276,7 @@ def info(database_type: str | None) -> None:
 
     # Usage hint
     console.print(
-        "[dim]Use 'fastapi-crud create' to generate a new project with this database[/dim]"
+        "[dim]Use 'boo-skeleton create' to generate a new project with this database[/dim]"
     )
     console.print()
 

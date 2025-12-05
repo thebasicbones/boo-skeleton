@@ -270,9 +270,9 @@ class ProjectGenerator:
             Path to templates directory
         """
         # Get package directory
-        import fastapi_crud_cli
+        import boo_skeleton
 
-        package_dir = Path(fastapi_crud_cli.__file__).parent
+        package_dir = Path(boo_skeleton.__file__).parent
         return package_dir / "templates"
 
     def _get_source_dir(self) -> Path:
@@ -283,9 +283,9 @@ class ProjectGenerator:
             Path to source directory containing files to copy
         """
         # Get package directory
-        import fastapi_crud_cli
+        import boo_skeleton
 
-        package_dir = Path(fastapi_crud_cli.__file__).parent
+        package_dir = Path(boo_skeleton.__file__).parent
 
         # For development: use src/ directory in workspace root
         workspace_root = package_dir.parent
