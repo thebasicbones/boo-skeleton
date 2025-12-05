@@ -11,12 +11,12 @@ class Settings(BaseSettings):
     
     # Database Configuration
     database_type: Literal["sqlite", "mongodb"{% if database_type == 'postgresql' %}, "postgresql"{% endif %}] = "{{ database_type }}"
-    {% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+{% if database_type == 'sqlite' or database_type == 'postgresql' -%}
     database_url: str = Field(
         default="{{ 'sqlite+aiosqlite:///./app.db' if database_type == 'sqlite' else 'postgresql+asyncpg://user:pass@localhost:5432/db' }}",
         description="Database connection URL"
     )
-    {% elif database_type == 'mongodb' -%}
+{% elif database_type == 'mongodb' -%}
     mongodb_url: str = Field(
         default="mongodb://localhost:27017",
         description="MongoDB connection URL"
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
         default="{{ project_slug }}",
         description="MongoDB database name"
     )
-    {% endif -%}
+{% endif -%}
     
     # Application Configuration
     environment: Literal["development", "staging", "production"] = "development"

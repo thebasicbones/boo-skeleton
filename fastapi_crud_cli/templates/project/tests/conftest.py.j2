@@ -5,11 +5,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-{% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+{%- if database_type == 'sqlite' or database_type == 'postgresql' %}
 from app.database_sqlalchemy import init_database, close_database
-{% elif database_type == 'mongodb' -%}
+{%- elif database_type == 'mongodb' %}
 from app.database_mongodb import init_database, close_database
-{% endif -%}
+{%- endif %}
 
 
 @pytest.fixture(scope="session")
