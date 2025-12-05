@@ -2,11 +2,11 @@
 Example script to populate the database with sample data
 """
 import asyncio
-{% if database_type == 'sqlite' or database_type == 'postgresql' -%}
+{%- if database_type == 'sqlite' or database_type == 'postgresql' %}
 from app.database_sqlalchemy import init_database
-{% elif database_type == 'mongodb' -%}
+{%- elif database_type == 'mongodb' %}
 from app.database_mongodb import init_database
-{% endif -%}
+{%- endif %}
 from app.database_factory import get_repository
 from app.schemas import ResourceCreate
 

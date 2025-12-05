@@ -12,21 +12,21 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
-{% if database_type == 'sqlite' -%}
+{%- if database_type == 'sqlite' %}
     "sqlalchemy>=2.0.23",
     "aiosqlite>=0.19.0",
-{% elif database_type == 'mongodb' -%}
+{%- elif database_type == 'mongodb' %}
     "motor>=3.3.2",
     "pymongo>=4.6.0",
-{% elif database_type == 'postgresql' -%}
+{%- elif database_type == 'postgresql' %}
     "sqlalchemy>=2.0.23",
     "asyncpg>=0.29.0",
-{% endif -%}
+{%- endif %}
 ]
 
 [project.optional-dependencies]
 dev = [
-{% if include_dev_tools -%}
+{%- if include_dev_tools %}
     "pytest>=7.4.3",
     "pytest-asyncio>=0.21.1",
     "pytest-cov>=4.1.0",
@@ -34,14 +34,14 @@ dev = [
     "black>=23.12.0",
     "ruff>=0.1.8",
     "mypy>=1.7.1",
-{% endif -%}
+{%- endif %}
 ]
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
+{%- if include_dev_tools %}
 
-{% if include_dev_tools -%}
 [tool.black]
 line-length = 100
 target-version = ['py310']
@@ -64,4 +64,4 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-{% endif -%}
+{%- endif %}
