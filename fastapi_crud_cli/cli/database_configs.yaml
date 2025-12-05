@@ -1,0 +1,55 @@
+sqlite:
+  name: SQLite
+  description: Lightweight file-based SQL database, perfect for development and small applications
+  dependencies:
+    - sqlalchemy>=2.0.23
+    - aiosqlite>=0.19.0
+  env_variables:
+    DATABASE_TYPE: sqlite
+    DATABASE_URL: sqlite+aiosqlite:///./app.db
+  features:
+    - Zero configuration required
+    - File-based storage
+    - ACID compliant
+    - Perfect for development
+  requirements:
+    - No external database server needed
+    - Python 3.10+
+
+mongodb:
+  name: MongoDB
+  description: NoSQL document database with flexible schema and horizontal scaling
+  dependencies:
+    - motor>=3.3.2
+    - pymongo>=4.6.0
+  env_variables:
+    DATABASE_TYPE: mongodb
+    MONGODB_URL: mongodb://localhost:27017
+    MONGODB_DATABASE: my_database
+  features:
+    - Document-based storage
+    - Flexible schema
+    - Horizontal scaling
+    - Rich query language
+  requirements:
+    - MongoDB server 4.4+
+    - Python 3.10+
+
+postgresql:
+  name: PostgreSQL
+  description: Advanced open-source relational database with robust features
+  dependencies:
+    - sqlalchemy>=2.0.23
+    - asyncpg>=0.29.0
+  env_variables:
+    DATABASE_TYPE: postgresql
+    DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/database
+  features:
+    - ACID compliant
+    - Advanced SQL features
+    - JSON support
+    - Full-text search
+    - Excellent performance
+  requirements:
+    - PostgreSQL server 12+
+    - Python 3.10+

@@ -1,0 +1,57 @@
+"""
+SQLAlchemy database configuration and session management
+"""
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+
+from config.settings import get_settings
+
+# Create declarative base for models
+Base = declarative_base()
+
+# Global engine and session maker
+engine = None
+async_session_maker = None
+
+
+async def init_database():
+    """Initialize database engine and create tables."""
+    global engine, async_session_maker
+    
+    settings = get_settings()
+    
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.environment == "development",
+        future=True
+    )
+    
+    async_session_maker = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+    
+    # Create tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def close_database():
+    """Close database connections."""
+    global engine
+    if engine:
+        await engine.dispose()
+
+
+async def get_db_session() -> AsyncSession:
+    """Get database session."""
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()

@@ -1,29 +1,108 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "fastapi-crud-backend"
-version = "1.0.0"
-description = "FastAPI CRUD Backend with Topological Sorting and Dual Database Support"
+name = "fastapi-crud-cli"
+version = "0.1.0"
+description = "A CLI scaffolding tool for generating FastAPI CRUD backend projects with database support (SQLite, MongoDB, PostgreSQL)"
+readme = "CLI_README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "FastAPI CRUD CLI Contributors", email = "contributors@fastapi-crud-cli.dev"}
+]
+maintainers = [
+    {name = "FastAPI CRUD CLI Contributors", email = "contributors@fastapi-crud-cli.dev"}
+]
+keywords = [
+    "fastapi",
+    "crud",
+    "cli",
+    "scaffolding",
+    "generator",
+    "template",
+    "boilerplate",
+    "rest-api",
+    "backend",
+    "mongodb",
+    "sqlite",
+    "postgresql",
+    "project-generator",
+    "code-generator"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Framework :: FastAPI",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Utilities",
+    "Environment :: Console",
+    "Typing :: Typed"
+]
+
+dependencies = [
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "jinja2>=3.0.0",
+    "pydantic>=2.0.0",
+    "questionary>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "hypothesis>=6.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+
+[project.scripts]
+fastapi-crud = "fastapi_crud_cli.cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/fastapi-crud-cli"
+Documentation = "https://github.com/yourusername/fastapi-crud-cli#readme"
+Repository = "https://github.com/yourusername/fastapi-crud-cli"
+Issues = "https://github.com/yourusername/fastapi-crud-cli/issues"
+
+[tool.setuptools]
+packages = ["fastapi_crud_cli", "fastapi_crud_cli.cli", "fastapi_crud_cli.utils"]
+
+[tool.setuptools.package-data]
+fastapi_crud_cli = [
+    "templates/**/*",
+    "templates/project/**/*",
+    "templates/static/*",
+    "source/**/*",
+    "source/app/**/*",
+    "source/config/**/*",
+    "source/tests/**/*",
+    "cli/*.yaml"
+]
 
 [tool.black]
 line-length = 100
-target-version = ['py311']
+target-version = ["py310", "py311", "py312"]
 include = '\.pyi?$'
-extend-exclude = '''
-/(
-  \.git
-  | \.venv
-  | venv
-  | build
-  | dist
-  | __pycache__
-  | \.pytest_cache
-  | \.hypothesis
-)/
-'''
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py310"
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -35,32 +114,63 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by black)
-    "B904",  # Exception chaining - to be addressed in future refactoring
+    "B008",  # do not perform function calls in argument defaults
+    "B904",  # raise from within except (intentional for custom exceptions)
 ]
 
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["F401"]  # Allow unused imports in __init__.py
-"tests/*" = ["B008", "E402"]  # Allow function calls in argument defaults and late imports in tests
-"app/routers/*" = ["B008"]  # Allow FastAPI Depends pattern in routers
-"scripts/*" = ["E402"]  # Allow imports after sys.path manipulation in scripts
+[tool.ruff.lint.isort]
+known-first-party = ["fastapi_crud_cli"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --strict-markers"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--ignore=src",
+    "--ignore=fastapi_crud_cli/source",
+    "--ignore=fastapi_crud_cli/templates",
+]
+markers = [
+    "property: Property-based tests using Hypothesis",
+    "integration: Integration tests",
+    "unit: Unit tests",
+]
 
 [tool.coverage.run]
-source = ["app"]
+source = ["fastapi_crud_cli"]
 omit = [
     "*/tests/*",
-    "*/venv/*",
     "*/__pycache__/*",
-    "*/migrations/*",
+    "*/venv/*",
 ]
 
 [tool.coverage.report]
-precision = 2
-show_missing = true
-skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

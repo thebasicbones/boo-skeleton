@@ -1,1 +1,1 @@
-"""Test Suite"""
+"""Tests for fastapi-crud-cli package."""
