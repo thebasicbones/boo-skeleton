@@ -139,7 +139,7 @@ jobs:
           echo "✓ Documentation built successfully"
 
       - name: Archive documentation
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: documentation
           path: docs/build/html/
